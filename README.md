@@ -29,3 +29,5 @@ dist@dist084.inf.santiago.usm.cl - 6K57TE62BWqQ
 Cada maquina tiene este repositorio github clonado, para actualizarlo escribir *git pull* en la consola y en el directorio Lab3SD
 
 Como cada maquina tiene el repositorio, solo es necesario correr los archivos de la maquina virtual.
+
+hola
