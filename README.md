@@ -1,4 +1,4 @@
-# Lab3SD
+# Planificación
 
 
 Maquinas y contraseñas, junto con asignacion de tareas:
