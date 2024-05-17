@@ -1,6 +1,6 @@
 module Lab3SD
 
-go 1.22.2
+go 1.18.1
 
 require (
 	google.golang.org/grpc v1.64.0
