@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -98,6 +99,300 @@ var MercDir_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "MensajeDirector",
 			Handler:    _MercDir_MensajeDirector_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "Proto/MatandoPiso.proto",
+}
+
+// DirDoshClient is the client API for DirDosh service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type DirDoshClient interface {
+	MensajeDosh(ctx context.Context, in *PedirMonto, opts ...grpc.CallOption) (*EnviarMonto, error)
+}
+
+type dirDoshClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewDirDoshClient(cc grpc.ClientConnInterface) DirDoshClient {
+	return &dirDoshClient{cc}
+}
+
+func (c *dirDoshClient) MensajeDosh(ctx context.Context, in *PedirMonto, opts ...grpc.CallOption) (*EnviarMonto, error) {
+	out := new(EnviarMonto)
+	err := c.cc.Invoke(ctx, "/Proto.DirDosh/MensajeDosh", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// DirDoshServer is the server API for DirDosh service.
+// All implementations must embed UnimplementedDirDoshServer
+// for forward compatibility
+type DirDoshServer interface {
+	MensajeDosh(context.Context, *PedirMonto) (*EnviarMonto, error)
+	mustEmbedUnimplementedDirDoshServer()
+}
+
+// UnimplementedDirDoshServer must be embedded to have forward compatible implementations.
+type UnimplementedDirDoshServer struct {
+}
+
+func (UnimplementedDirDoshServer) MensajeDosh(context.Context, *PedirMonto) (*EnviarMonto, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MensajeDosh not implemented")
+}
+func (UnimplementedDirDoshServer) mustEmbedUnimplementedDirDoshServer() {}
+
+// UnsafeDirDoshServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to DirDoshServer will
+// result in compilation errors.
+type UnsafeDirDoshServer interface {
+	mustEmbedUnimplementedDirDoshServer()
+}
+
+func RegisterDirDoshServer(s grpc.ServiceRegistrar, srv DirDoshServer) {
+	s.RegisterService(&DirDosh_ServiceDesc, srv)
+}
+
+func _DirDosh_MensajeDosh_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PedirMonto)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DirDoshServer).MensajeDosh(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Proto.DirDosh/MensajeDosh",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DirDoshServer).MensajeDosh(ctx, req.(*PedirMonto))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// DirDosh_ServiceDesc is the grpc.ServiceDesc for DirDosh service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var DirDosh_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "Proto.DirDosh",
+	HandlerType: (*DirDoshServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "MensajeDosh",
+			Handler:    _DirDosh_MensajeDosh_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "Proto/MatandoPiso.proto",
+}
+
+// DirNameClient is the client API for DirName service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type DirNameClient interface {
+	RegistrosDirector(ctx context.Context, in *EnviarDecision, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	PedirRegistros(ctx context.Context, in *EnviarSolicitud, opts ...grpc.CallOption) (*RegistroMercenario, error)
+}
+
+type dirNameClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewDirNameClient(cc grpc.ClientConnInterface) DirNameClient {
+	return &dirNameClient{cc}
+}
+
+func (c *dirNameClient) RegistrosDirector(ctx context.Context, in *EnviarDecision, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/Proto.DirName/RegistrosDirector", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dirNameClient) PedirRegistros(ctx context.Context, in *EnviarSolicitud, opts ...grpc.CallOption) (*RegistroMercenario, error) {
+	out := new(RegistroMercenario)
+	err := c.cc.Invoke(ctx, "/Proto.DirName/PedirRegistros", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// DirNameServer is the server API for DirName service.
+// All implementations must embed UnimplementedDirNameServer
+// for forward compatibility
+type DirNameServer interface {
+	RegistrosDirector(context.Context, *EnviarDecision) (*emptypb.Empty, error)
+	PedirRegistros(context.Context, *EnviarSolicitud) (*RegistroMercenario, error)
+	mustEmbedUnimplementedDirNameServer()
+}
+
+// UnimplementedDirNameServer must be embedded to have forward compatible implementations.
+type UnimplementedDirNameServer struct {
+}
+
+func (UnimplementedDirNameServer) RegistrosDirector(context.Context, *EnviarDecision) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RegistrosDirector not implemented")
+}
+func (UnimplementedDirNameServer) PedirRegistros(context.Context, *EnviarSolicitud) (*RegistroMercenario, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PedirRegistros not implemented")
+}
+func (UnimplementedDirNameServer) mustEmbedUnimplementedDirNameServer() {}
+
+// UnsafeDirNameServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to DirNameServer will
+// result in compilation errors.
+type UnsafeDirNameServer interface {
+	mustEmbedUnimplementedDirNameServer()
+}
+
+func RegisterDirNameServer(s grpc.ServiceRegistrar, srv DirNameServer) {
+	s.RegisterService(&DirName_ServiceDesc, srv)
+}
+
+func _DirName_RegistrosDirector_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EnviarDecision)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DirNameServer).RegistrosDirector(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Proto.DirName/RegistrosDirector",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DirNameServer).RegistrosDirector(ctx, req.(*EnviarDecision))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DirName_PedirRegistros_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EnviarSolicitud)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DirNameServer).PedirRegistros(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Proto.DirName/PedirRegistros",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DirNameServer).PedirRegistros(ctx, req.(*EnviarSolicitud))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// DirName_ServiceDesc is the grpc.ServiceDesc for DirName service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var DirName_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "Proto.DirName",
+	HandlerType: (*DirNameServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "RegistrosDirector",
+			Handler:    _DirName_RegistrosDirector_Handler,
+		},
+		{
+			MethodName: "PedirRegistros",
+			Handler:    _DirName_PedirRegistros_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "Proto/MatandoPiso.proto",
+}
+
+// NameDataClient is the client API for NameData service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type NameDataClient interface {
+	RegistroMercenario(ctx context.Context, in *EnviarDecision, opts ...grpc.CallOption) (*emptypb.Empty, error)
+}
+
+type nameDataClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewNameDataClient(cc grpc.ClientConnInterface) NameDataClient {
+	return &nameDataClient{cc}
+}
+
+func (c *nameDataClient) RegistroMercenario(ctx context.Context, in *EnviarDecision, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/Proto.NameData/RegistroMercenario", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// NameDataServer is the server API for NameData service.
+// All implementations must embed UnimplementedNameDataServer
+// for forward compatibility
+type NameDataServer interface {
+	RegistroMercenario(context.Context, *EnviarDecision) (*emptypb.Empty, error)
+	mustEmbedUnimplementedNameDataServer()
+}
+
+// UnimplementedNameDataServer must be embedded to have forward compatible implementations.
+type UnimplementedNameDataServer struct {
+}
+
+func (UnimplementedNameDataServer) RegistroMercenario(context.Context, *EnviarDecision) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RegistroMercenario not implemented")
+}
+func (UnimplementedNameDataServer) mustEmbedUnimplementedNameDataServer() {}
+
+// UnsafeNameDataServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to NameDataServer will
+// result in compilation errors.
+type UnsafeNameDataServer interface {
+	mustEmbedUnimplementedNameDataServer()
+}
+
+func RegisterNameDataServer(s grpc.ServiceRegistrar, srv NameDataServer) {
+	s.RegisterService(&NameData_ServiceDesc, srv)
+}
+
+func _NameData_RegistroMercenario_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EnviarDecision)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NameDataServer).RegistroMercenario(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Proto.NameData/RegistroMercenario",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NameDataServer).RegistroMercenario(ctx, req.(*EnviarDecision))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// NameData_ServiceDesc is the grpc.ServiceDesc for NameData service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var NameData_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "Proto.NameData",
+	HandlerType: (*NameDataServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "RegistroMercenario",
+			Handler:    _NameData_RegistroMercenario_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

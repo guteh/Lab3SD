@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 package Proto;
+import "google/protobuf/empty.proto";
 
 option go_package = "./Proto";  //Se define la carpeta donde se guardará el archivo generado
 
@@ -18,3 +19,47 @@ message DirectorMensaje { //Director envia inicio de mision, el estado despues d
   int32 estado = 2;
   int32 fase = 3;
 }
+
+
+
+
+service DirDosh {
+  rpc MensajeDosh(PedirMonto) returns (EnviarMonto)  {}  //Se define el método DirDosh
+}
+
+message PedirMonto {  //Director pide monto acumulado
+  int32 monto = 1;
+}
+
+message EnviarMonto { //Dosh Bank entrega monto acumulado
+  int32 monto = 1;
+}
+
+
+
+service DirName {
+  rpc RegistrosDirector(EnviarDecision) returns (google.protobuf.Empty) {} //Director envia decision de mercenario junto con piso
+  rpc PedirRegistros(EnviarSolicitud) returns (RegistroMercenario) {}  //Se define el método DirName, que toma decisiones y decide DataNode
+}
+
+service NameData {
+  rpc RegistroMercenario(EnviarDecision) returns (google.protobuf.Empty) {}  //Se define el método NameData, que registra decisiones en .txt
+}
+
+
+message EnviarDecision {  //Se envian decisiones de mercenerario junto con el piso
+  string nombre = 1;
+  int32 decision = 2;
+  int32 piso = 3;
+}
+
+message EnviarSolicitud { //Director pide registros de mercenario por nombre
+  string nombre = 1;
+}
+
+message RegistroMercenario { //Se envian los registros de los mercenarios al director
+  string nombre = 1;
+  string decisiones = 2;
+}
+
+
