@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package Proto;
+
+option go_package = "./Proto";  //Se define la carpeta donde se guardará el archivo generado
+
+service MercDir {
+  rpc MensajeDirector(MercenarioMensaje) returns (DirectorMensaje) {}  //Se define el método MercDir
+}
+
+message MercenarioMensaje {  //Se define el mensaje que se enviará al director, ademas de decisiones tomadas
+  int32 peticion = 1;
+  int32 decision = 2;
+}
+
+message DirectorMensaje { //Director envia inicio de mision, el estado despues de cada decision y fase
+  int32 inicio = 1;
+  int32 estado = 2;
+  int32 fase = 3;
+}
