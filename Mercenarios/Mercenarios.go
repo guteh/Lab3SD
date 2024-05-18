@@ -34,7 +34,7 @@ func InicioMercenario(id int,wg *sync.WaitGroup) { //Toma como parametros el id 
 
 	// Genera cantidades random de recursos
 
-	serverAddr := "0.0.0.0:8080"
+	serverAddr := "10.35.169.91:8080"
 	conn, err := grpc.NewClient(serverAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))  //Se conecta al servidor central
 	if err != nil {
 		fmt.Println("Error al conectar al servidor central:", err)
