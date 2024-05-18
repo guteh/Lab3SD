@@ -2,7 +2,6 @@ package main
 
 import (
 	pb "Lab3SD/Proto"
-	"context"
 	"fmt"
 	"log"
 	"net"
@@ -17,24 +16,28 @@ var mutex = &sync.Mutex{} //Se crea un mutex para evitar problemas de concurrenc
 type server struct {  //Crea el servidor rcp
     pb.UnimplementedMercDirServer
 	fase int
+	suma int
+	nmercenarios int
 	grpcServer *grpc.Server
 }
 
 //Implementa la funcion SolicitarM de la interfaz ServicioRecursos de RCP
 
-func (s *server) MensajeDirector(ctx context.Context, req *pb.MercenarioMensaje) (*pb.DirectorMensaje, error) {
-	mutex.Lock() //Bloquea recursos
-
-
+func (s *server) MensajeDirector(req *pb.MercenarioMensaje, stream pb.MercDir_MensajeDirectorServer) error {
     if req.GetPeticion() == 1 { 
-        print("ostia chaval")
-        return &pb.DirectorMensaje{Inicio: 1}, nil //Se retorna en funcion SolicitarM un mensaje de aprobacion
+		mutex.Lock() //Bloquea recursos
+		s.suma += 1 //Se suma 1 a la variable suma
+		mutex.Unlock() // Desbloquea recursos
+		fmt.Printf("Se ha sumado 1 a la suma\n")
+	}
+	if s.suma == s.nmercenarios {
+        if err := stream.Send(&pb.DirectorMensaje{Inicio: 1}); err != nil {
+            return err
+        }
+        
+	}
 
-    } else {
-        // No hay suficientes recursos
-
-        return &pb.DirectorMensaje{Inicio: 0}, nil  //Se retorna en funcion SolicitarM un mensaje de denegacion
-    }
+	return nil
 }
 
 
@@ -48,12 +51,14 @@ func main() {
 	s := &server{ //Se le asignan los recursos al servidor
 		fase: 0,
 		grpcServer: grpcServer,
+		suma: 0,
+		nmercenarios: 10,
     }
 	mutex.Unlock()
 
 	pb.RegisterMercDirServer(grpcServer, s) //Se registra el servidor
 	
-	addr := "10.35.169.91:8080"  //Se asigna la direccion del servidor
+	addr := "0.0.0.0:8080"  //Se asigna la direccion del servidor
 	lis, err := net.Listen("tcp", addr) //Se crea el listener
     if err != nil {
 		log.Fatalf("Fallo al escuchar %v", err)

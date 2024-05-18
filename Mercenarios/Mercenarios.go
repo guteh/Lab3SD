@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
+	"log"
 	"sync"
 
 	pb "Lab3SD/Proto"
@@ -10,6 +12,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
+var mutex = &sync.Mutex{} //Se crea un mutex para evitar problemas de concurrencia
 
 func main() {
 	var wg sync.WaitGroup
@@ -17,8 +20,8 @@ func main() {
 
 
 	// Se crean los cuatro grupos
-	for i := 0; i < 1; i++ {  // Se crean 4 grupos, si se quiere modificar se debe cambiar el 4 por otro numero y el archivo Central.go linea 53
-		wg.Add(1)
+	for i := 0; i < 10; i++ {  // Se crean 4 grupos, si se quiere modificar se debe cambiar el 4 por otro numero y el archivo Central.go linea 53
+		wg.Add(1)   
 		go InicioMercenario(i + 1, &wg)  //Empieza ejecucion de equipo
 		fmt.Printf("Mercenario %d redi!\n", i+1)
 	}
@@ -26,15 +29,15 @@ func main() {
 	// Espera que todas las ejecuciones terminen para finalizar la ejecucion del codigo.
 	wg.Wait()
 
+	fmt.Println("Todos los equipos han terminado")
+
 }
 
 func InicioMercenario(id int,wg *sync.WaitGroup) { //Toma como parametros el id del equipo y el grupo de espera
 
 	defer wg.Done()
 
-	// Genera cantidades random de recursos
-
-	serverAddr := "10.35.169.91:8080"
+	serverAddr := "0.0.0.0:8080"
 	conn, err := grpc.NewClient(serverAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))  //Se conecta al servidor central
 	if err != nil {
 		fmt.Println("Error al conectar al servidor central:", err)
@@ -43,17 +46,23 @@ func InicioMercenario(id int,wg *sync.WaitGroup) { //Toma como parametros el id 
 	defer conn.Close()
 
 	c := pb.NewMercDirClient(conn)
-
+	stream, err := c.MensajeDirector(context.Background(), &pb.MercenarioMensaje{Peticion: 1})
+	if err != nil {
+		log.Fatalf("Error on stream: %v", err)
+	}
+	
 	for {
-		response, err := c.MensajeDirector(context.Background(), &pb.MercenarioMensaje{Peticion: 1, Decision: 1})  //Envia peticion de recursos a servidor central
-		if err != nil {
-			fmt.Println("Error al enviar el mensaje al servidor central:", err)
+		msg, err := stream.Recv()
+		if err == io.EOF {
+			break
 		}
-		if response.Inicio == 1 {
-			fmt.Printf("Se inicia mision")
-			break  //Si la respuesta es 1, se cierra la comunicacion
-		} else {
-			fmt.Printf("No hay mision")
+		if err != nil {
+			log.Fatalf("%v.StreamMessages(_) = _, %v", c, err)
+		}
+		if msg.GetInicio() == 1 {
+			mutex.Lock()
+			fmt.Println("Empieza mision mercenario:", id)
+			mutex.Unlock()
 		}
 	}
 }

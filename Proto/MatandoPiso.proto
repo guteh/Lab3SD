@@ -6,7 +6,7 @@ import "google/protobuf/empty.proto";
 option go_package = "./Proto";  //Se define la carpeta donde se guardará el archivo generado
 
 service MercDir {
-  rpc MensajeDirector(MercenarioMensaje) returns (DirectorMensaje) {}  //Se define el método MercDir
+  rpc MensajeDirector(MercenarioMensaje) returns (stream DirectorMensaje) {}  //Se define el método MercDir
 }
 
 message MercenarioMensaje {  //Se define el mensaje que se enviará al director, ademas de decisiones tomadas

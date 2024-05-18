@@ -23,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MercDirClient interface {
-	MensajeDirector(ctx context.Context, in *MercenarioMensaje, opts ...grpc.CallOption) (*DirectorMensaje, error)
+	MensajeDirector(ctx context.Context, in *MercenarioMensaje, opts ...grpc.CallOption) (MercDir_MensajeDirectorClient, error)
 }
 
 type mercDirClient struct {
@@ -34,20 +34,43 @@ func NewMercDirClient(cc grpc.ClientConnInterface) MercDirClient {
 	return &mercDirClient{cc}
 }
 
-func (c *mercDirClient) MensajeDirector(ctx context.Context, in *MercenarioMensaje, opts ...grpc.CallOption) (*DirectorMensaje, error) {
-	out := new(DirectorMensaje)
-	err := c.cc.Invoke(ctx, "/Proto.MercDir/MensajeDirector", in, out, opts...)
+func (c *mercDirClient) MensajeDirector(ctx context.Context, in *MercenarioMensaje, opts ...grpc.CallOption) (MercDir_MensajeDirectorClient, error) {
+	stream, err := c.cc.NewStream(ctx, &MercDir_ServiceDesc.Streams[0], "/Proto.MercDir/MensajeDirector", opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &mercDirMensajeDirectorClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type MercDir_MensajeDirectorClient interface {
+	Recv() (*DirectorMensaje, error)
+	grpc.ClientStream
+}
+
+type mercDirMensajeDirectorClient struct {
+	grpc.ClientStream
+}
+
+func (x *mercDirMensajeDirectorClient) Recv() (*DirectorMensaje, error) {
+	m := new(DirectorMensaje)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // MercDirServer is the server API for MercDir service.
 // All implementations must embed UnimplementedMercDirServer
 // for forward compatibility
 type MercDirServer interface {
-	MensajeDirector(context.Context, *MercenarioMensaje) (*DirectorMensaje, error)
+	MensajeDirector(*MercenarioMensaje, MercDir_MensajeDirectorServer) error
 	mustEmbedUnimplementedMercDirServer()
 }
 
@@ -55,8 +78,8 @@ type MercDirServer interface {
 type UnimplementedMercDirServer struct {
 }
 
-func (UnimplementedMercDirServer) MensajeDirector(context.Context, *MercenarioMensaje) (*DirectorMensaje, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method MensajeDirector not implemented")
+func (UnimplementedMercDirServer) MensajeDirector(*MercenarioMensaje, MercDir_MensajeDirectorServer) error {
+	return status.Errorf(codes.Unimplemented, "method MensajeDirector not implemented")
 }
 func (UnimplementedMercDirServer) mustEmbedUnimplementedMercDirServer() {}
 
@@ -71,22 +94,25 @@ func RegisterMercDirServer(s grpc.ServiceRegistrar, srv MercDirServer) {
 	s.RegisterService(&MercDir_ServiceDesc, srv)
 }
 
-func _MercDir_MensajeDirector_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MercenarioMensaje)
-	if err := dec(in); err != nil {
-		return nil, err
+func _MercDir_MensajeDirector_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(MercenarioMensaje)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	if interceptor == nil {
-		return srv.(MercDirServer).MensajeDirector(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/Proto.MercDir/MensajeDirector",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MercDirServer).MensajeDirector(ctx, req.(*MercenarioMensaje))
-	}
-	return interceptor(ctx, in, info, handler)
+	return srv.(MercDirServer).MensajeDirector(m, &mercDirMensajeDirectorServer{stream})
+}
+
+type MercDir_MensajeDirectorServer interface {
+	Send(*DirectorMensaje) error
+	grpc.ServerStream
+}
+
+type mercDirMensajeDirectorServer struct {
+	grpc.ServerStream
+}
+
+func (x *mercDirMensajeDirectorServer) Send(m *DirectorMensaje) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 // MercDir_ServiceDesc is the grpc.ServiceDesc for MercDir service.
@@ -95,13 +121,14 @@ func _MercDir_MensajeDirector_Handler(srv interface{}, ctx context.Context, dec 
 var MercDir_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "Proto.MercDir",
 	HandlerType: (*MercDirServer)(nil),
-	Methods: []grpc.MethodDesc{
+	Methods:     []grpc.MethodDesc{},
+	Streams: []grpc.StreamDesc{
 		{
-			MethodName: "MensajeDirector",
-			Handler:    _MercDir_MensajeDirector_Handler,
+			StreamName:    "MensajeDirector",
+			Handler:       _MercDir_MensajeDirector_Handler,
+			ServerStreams: true,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
 	Metadata: "Proto/MatandoPiso.proto",
 }
 
