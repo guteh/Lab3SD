@@ -537,7 +537,7 @@ func main() {
     NameNode := pb.NewDirNameClient(conn)
 
 	//Conexion a DoshBank
-	conn1, err1 := grpc.NewClient("10.35.169.93:8089", grpc.WithTransportCredentials(insecure.NewCredentials()))  //10.35.169.93:8089
+	conn1, err1 := grpc.NewClient("10.35.169.92:8089", grpc.WithTransportCredentials(insecure.NewCredentials()))  //10.35.169.93:8089
     if err1 != nil {
 		log.Fatalf("Fallo al conectarse a NameNode: %v", err1)
     }
