@@ -443,7 +443,7 @@ func (s *server) Fase3(ctx context.Context, req *pb.MercenarioMensaje) (*pb.Dire
 }
 
 func StartServerMerc(s *server, grpcServer *grpc.Server){
-	ip := "10.35.169.91:8080"
+	ip := "10.35.169.91:8088"
 	pb.RegisterMercDirServer(grpcServer, s) //Se registra el servidor
 	
 
