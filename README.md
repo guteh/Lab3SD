@@ -8,10 +8,10 @@ Para ingresar a maquinas leer archivos que subio ayudante a aula, Tutorial de Ac
 ### Director - DataNode1:
 dist@dist081.inf.santiago.usm.cl - xrLQTggUzKS5 IP: 10.35.169.91
 
-### Dosh Bank:
+### Dosh Bank: - DataNode2:
 dist@dist082.inf.santiago.usm.cl - C9UucTLgg7bJ IP: 10.35.169.92
 
-### Name Node - DataNode2:
+### Name Node
 dist@dist083.inf.santiago.usm.cl - YH6LqgC67Qqq IP: 10.35.169.93
 
 ### Mercenarios - DataNode3:
