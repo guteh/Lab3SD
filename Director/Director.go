@@ -11,12 +11,10 @@ import (
 	"strconv"
 	"sync"
 	"time"
-	
-	"github.com/streadway/amqp"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/emptypb"
-
 )
 var mutex = &sync.Mutex{} //Se crea un mutex para evitar problemas de concurrencia
 
@@ -43,6 +41,7 @@ type server struct {  //Crea el servidor rcp con sus variables globales
 	Y int
 	camino int
 	NameNode pb.DirNameClient
+	DoshBank pb.DirNameClient
 
 	
 }
@@ -110,9 +109,9 @@ func (s *server) Fase1(ctx context.Context, req *pb.MercenarioMensaje) (*pb.Dire
 			if decisor > prob1{ //Perdio la probabilidad
 				 
 				fmt.Printf("Mercenario %d ha muerto\n", req.GetId())
-				sendFallecimientoNotification(req.GetId(), s.fase)
 				s.nmercenarios -= 1 //Decremento la cantidad de mercenarios
 				nombre := strconv.Itoa(int(req.GetId())) //Quito mercenario de la lista
+				s.DoshBank.RegistrosDirector(context.Background(), &pb.EnviarDecision{Nombre: nombre, Piso: 1, Decision: 0})
 				for i := range s.mercenarios {
 					if s.mercenarios[i] == nombre { 
 						s.mercenarios = append(s.mercenarios[:i], s.mercenarios[i+1:]...)
@@ -143,9 +142,9 @@ func (s *server) Fase1(ctx context.Context, req *pb.MercenarioMensaje) (*pb.Dire
 			if decisor > prob2{
 				 
 				fmt.Printf("Mercenario %d ha muerto\n", req.GetId())
-				sendFallecimientoNotification(req.GetId(), s.fase)
 				s.nmercenarios -= 1
 				nombre := strconv.Itoa(int(req.GetId()))
+				s.DoshBank.RegistrosDirector(context.Background(), &pb.EnviarDecision{Nombre: nombre, Piso: 1, Decision: 0})
 				for i := range s.mercenarios {
 					if s.mercenarios[i] == nombre {
 						s.mercenarios = append(s.mercenarios[:i], s.mercenarios[i+1:]...)
@@ -173,11 +172,11 @@ func (s *server) Fase1(ctx context.Context, req *pb.MercenarioMensaje) (*pb.Dire
 			if decisor > prob3{
 				 
 				fmt.Printf("Mercenario %d ha muerto\n", req.GetId())
-				sendFallecimientoNotification(req.GetId(), s.fase)
 				s.nmercenarios -= 1
-				nombre := strconv.Itoa(int(req.GetId())) // replace with the name you want to remove
+				nombre := strconv.Itoa(int(req.GetId())) // 
+				s.DoshBank.RegistrosDirector(context.Background(), &pb.EnviarDecision{Nombre: nombre, Piso: 1, Decision: 0})
 				for i := range s.mercenarios {
-					if s.mercenarios[i] == nombre { // replace .Name with the actual field name
+					if s.mercenarios[i] == nombre { //
 						s.mercenarios = append(s.mercenarios[:i], s.mercenarios[i+1:]...)
 						break
 					}
@@ -207,9 +206,10 @@ func (s *server) Fase1(ctx context.Context, req *pb.MercenarioMensaje) (*pb.Dire
 			if decisor > prob1{
 				 
 				fmt.Printf("Mercenario %d ha muerto\n", req.GetId())
-				sendFallecimientoNotification(req.GetId(), s.fase)
 				s.nmercenarios -= 1
 				nombre := strconv.Itoa(int(req.GetId()))
+				s.DoshBank.RegistrosDirector(context.Background(), &pb.EnviarDecision{Nombre: nombre, Piso: 1, Decision: 0})
+
 				for i := range s.mercenarios {
 					if s.mercenarios[i] == nombre { 
 						s.mercenarios = append(s.mercenarios[:i], s.mercenarios[i+1:]...)
@@ -237,9 +237,10 @@ func (s *server) Fase1(ctx context.Context, req *pb.MercenarioMensaje) (*pb.Dire
 			if decisor > prob2{
 				 
 				fmt.Printf("Mercenario %d ha muerto\n", req.GetId())
-				sendFallecimientoNotification(req.GetId(), s.fase)
 				s.nmercenarios -= 1
 				nombre := strconv.Itoa(int(req.GetId())) 
+				s.DoshBank.RegistrosDirector(context.Background(), &pb.EnviarDecision{Nombre: nombre, Piso: 1, Decision: 0})
+
 				for i := range s.mercenarios {
 					if s.mercenarios[i] == nombre { 
 						s.mercenarios = append(s.mercenarios[:i], s.mercenarios[i+1:]...)
@@ -267,9 +268,10 @@ func (s *server) Fase1(ctx context.Context, req *pb.MercenarioMensaje) (*pb.Dire
 			if decisor > prob3{
 				 
 				fmt.Printf("Mercenario %d ha muerto\n", req.GetId())
-				sendFallecimientoNotification(req.GetId(), s.fase)
 				s.nmercenarios -= 1
 				nombre := strconv.Itoa(int(req.GetId()))
+				s.DoshBank.RegistrosDirector(context.Background(), &pb.EnviarDecision{Nombre: nombre, Piso: 1, Decision: 0})
+
 				for i := range s.mercenarios {
 					if s.mercenarios[i] == nombre {
 						s.mercenarios = append(s.mercenarios[:i], s.mercenarios[i+1:]...)
@@ -327,9 +329,10 @@ func (s *server) Fase2(ctx context.Context, req *pb.MercenarioMensaje) (*pb.Dire
 	if s.camino == 1 && req.GetDecision() == 1{ //Si eligio el camino A y era el B
 		
 		fmt.Printf("Mercenario %d ha muerto\n", req.GetId())
-		sendFallecimientoNotification(req.GetId(), s.fase)
 		s.nmercenarios -= 1
 		nombre := strconv.Itoa(int(req.GetId()))
+		s.DoshBank.RegistrosDirector(context.Background(), &pb.EnviarDecision{Nombre: nombre, Piso: 2, Decision: 0})
+
 		for i := range s.mercenarios {
 			if s.mercenarios[i] == nombre {
 				s.mercenarios = append(s.mercenarios[:i], s.mercenarios[i+1:]...)
@@ -351,9 +354,10 @@ func (s *server) Fase2(ctx context.Context, req *pb.MercenarioMensaje) (*pb.Dire
 	if s.camino == 0 && req.GetDecision() == 2{ //Si eligio el camino B y era el A
 		
 		fmt.Printf("Mercenario %d ha muerto\n", req.GetId())
-		sendFallecimientoNotification(req.GetId(), s.fase)
 		s.nmercenarios -= 1
 		nombre := strconv.Itoa(int(req.GetId())) 
+		s.DoshBank.RegistrosDirector(context.Background(), &pb.EnviarDecision{Nombre: nombre, Piso: 2, Decision: 0})
+
 		for i := range s.mercenarios {
 			if s.mercenarios[i] == nombre { 
 				s.mercenarios = append(s.mercenarios[:i], s.mercenarios[i+1:]...)
@@ -425,8 +429,8 @@ func (s *server) Fase3(ctx context.Context, req *pb.MercenarioMensaje) (*pb.Dire
 					
 					if aciertos < 2 { //Si no acierta 2 o mas veces muere
 						fmt.Printf("Mercenario %d ha muerto\n", req.GetId())
-						sendFallecimientoNotification(req.GetId(), s.fase)
 						s.nmercenarios -= 1
+						s.DoshBank.RegistrosDirector(context.Background(), &pb.EnviarDecision{Nombre: strconv.Itoa(int(req.GetId())), Piso: 3, Decision: 0})
 						fmt.Printf("Mercenarios restantes: %d\n",s.nmercenarios )
 						if s.nmercenarios == 1 {
 							go func ()  {
@@ -454,7 +458,7 @@ func (s *server) Fase3(ctx context.Context, req *pb.MercenarioMensaje) (*pb.Dire
 }
 
 func StartServerMerc(s *server, grpcServer *grpc.Server){
-	ip := "0.0.0.0:8088"
+	ip := "10.35.169.91:8088"
 	pb.RegisterMercDirServer(grpcServer, s) //Se registra el servidor
 	
 
@@ -471,8 +475,8 @@ func StartServerMerc(s *server, grpcServer *grpc.Server){
 }
 
 func StartServerData(s *server, grpcServer *grpc.Server){
-	fmt.Printf("Se inicia servicio Director!\n")
-	ip := "0.0.0.0:8084"
+	fmt.Printf("DataNode\n")
+	ip := "10.35.169.91:8084"
 	pb.RegisterNameDataServer(grpcServer, s) //Se registra el servidor
 	 //Se asigna la direccion del servidor
 	lis, err := net.Listen("tcp", ip) //Se crea el listener
@@ -521,54 +525,24 @@ func (s *server) RegistroMercenario(ctx context.Context, req *pb.EnviarDecision)
 	return &emptypb.Empty{}, nil
 }
 
-func failOnError(err error, msg string) {
-	if err != nil {
-		log.Fatalf("%s: %s", msg, err)
-	}
-}
-
-func sendFallecimientoNotification(mercenario int32, fase int) { //RABBITMQ (supuestamente)
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
-	failOnError(err, "Failed to connect to RabbitMQ")
-	defer conn.Close()
-
-	ch, err := conn.Channel()
-	failOnError(err, "Failed to open a channel")
-	defer ch.Close()
-
-	q, err := ch.QueueDeclare(
-		"mercenario_status", // name
-		false,               // durable
-		false,               // delete when unused
-		false,               // exclusive
-		false,               // no-wait
-		nil,                 // arguments
-	)
-	failOnError(err, "Failed to declare a queue")
-	body := "Merceario " + strconv.Itoa(int(mercenario)) + " falleció en el piso " + strconv.Itoa(fase)
-	err = ch.Publish(
-		"",     // exchange
-		q.Name, // routing key
-		false,  // mandatory
-		false,  // immediate
-		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        []byte(body),
-		})
-	failOnError(err, "Failed to publish a message")
-	log.Printf(" [x] Sent %s", body)
-}
-
 
 func main() {
 
 	//Conexion a NameNode
-	conn, err := grpc.NewClient("0.0.0.0:8080", grpc.WithTransportCredentials(insecure.NewCredentials()))  //10.35.169.93:8080
+	conn, err := grpc.NewClient("10.35.169.93:8080", grpc.WithTransportCredentials(insecure.NewCredentials()))  //10.35.169.93:8080
     if err != nil {
 		log.Fatalf("Fallo al conectarse a NameNode: %v", err)
     }
     defer conn.Close()
     NameNode := pb.NewDirNameClient(conn)
+
+	//Conexion a DoshBank
+	conn1, err1 := grpc.NewClient("10.35.169.93:8089", grpc.WithTransportCredentials(insecure.NewCredentials()))  //10.35.169.93:8089
+    if err1 != nil {
+		log.Fatalf("Fallo al conectarse a NameNode: %v", err1)
+    }
+    defer conn1.Close()
+    DoshBank := pb.NewDirNameClient(conn1)
 	
 
 
@@ -593,6 +567,7 @@ func main() {
 		decisor : make([]int32, 5),
 		camino: 0,
 		NameNode: NameNode,
+		DoshBank: DoshBank,
     }
 	
 	mutex.Unlock()
@@ -609,4 +584,3 @@ func main() {
 	
 	
 }
-
