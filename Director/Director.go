@@ -460,7 +460,7 @@ func main() {
 	pb.RegisterMercDirServer(grpcServer, s) //Se registra el servidor
 
 	
-	addr := "0.0.0.0:8080"  //Se asigna la direccion del servidor
+	addr := "10.35.169.91:8080"  //Se asigna la direccion del servidor
 	lis, err := net.Listen("tcp", addr) //Se crea el listener
     if err != nil {
 		log.Fatalf("Fallo al escuchar %v", err)
