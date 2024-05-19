@@ -19,6 +19,7 @@ message MercenarioMensaje {  //Se define el mensaje que se enviará al director,
   int32 peticion = 1;
   int32 decision = 2;
   int32 id = 3;
+  repeated int32 decisiones = 4;  //Decisiones tomadas
 }
 
 message DirectorMensaje { //Director envia inicio de mision, el estado despues de cada decision y fase

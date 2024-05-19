@@ -6,6 +6,7 @@ import (
 	"log"
 	"math/rand"
 	"sync"
+	"time"
 
 	pb "Lab3SD/Proto"
 
@@ -29,8 +30,8 @@ func main() {
 
 	// Wait for all mercenaries to complete
 	wg.Wait()
-
-	fmt.Println("Todos los equipos han terminado")
+	time.Sleep(5 * time.Second)
+	fmt.Println("Termina la mision de los mercenarios")
 }
 
 func InicioMercenario(id int, wg *sync.WaitGroup, Estado int32) {
@@ -60,75 +61,72 @@ func InicioMercenario(id int, wg *sync.WaitGroup, Estado int32) {
 
 	fmt.Printf("Mercenario %d ha iniciado la misión\n", id)
 	Nivel = 1
-	for {
-		if Estado == 0 {
-			fmt.Printf("Muere mercenario %d\n", id)
-			break
-		}
 
 
-		switch Nivel {
-		case 1:
-			fmt.Println("Mercenario ", id, " en nivel 1")
-			randomNumber := rand.Intn(3) + 1
-			for {
-				resp, err := c.Fase1(context.Background(), &pb.MercenarioMensaje{Decision: int32(randomNumber), Id: int32(id)})
-				if err != nil {
-					log.Fatalf("Error en Fase1: %v", err)
-				}
-				if resp.GetEstado() == 1 {
-					fmt.Println("Mercenario", id, "pasa a nivel 2")
-					Estado = resp.GetEstado()
-					Nivel = 2
-					break
-				}
-				if resp.GetEstado() == 0 {
-					Estado = resp.GetEstado()
-					Nivel = 0
-					break
-				}
+	if Nivel == 1 {
+		fmt.Println("Mercenario ", id, " en nivel 1")
+		randomNumber := rand.Intn(3) + 1
+		for {
+			resp, err := c.Fase1(context.Background(), &pb.MercenarioMensaje{Decision: int32(randomNumber), Id: int32(id)})
+			if err != nil {
+				log.Fatalf("Error en Fase1: %v", err)
 			}
+			if resp.GetEstado() == 1 {
+				fmt.Println("Mercenario", id, "pasa a nivel 2")
+				Nivel = 2
+				break
 
-		case 2:
-			fmt.Println("Mercenario ", id, " en nivel 2")
-			randomNumber := rand.Intn(2) + 1
-			for {
-				resp, err := c.Fase2(context.Background(), &pb.MercenarioMensaje{Decision: int32(randomNumber), Id: int32(id)})
-				if err != nil {
-					log.Fatalf("Error en Fase2: %v", err)
-				}
-				if resp.GetEstado() == 1 {
-					fmt.Println("Mercenario", id, "pasa a nivel 3")
-					Estado = resp.GetEstado()
-					Nivel = 3
-					break
-				}
-				if resp.GetEstado() == 0 {
-					Estado = resp.GetEstado()
-					Nivel = 0
-					break
-				}
 			}
-
-		case 8:
-			var aciertos int = 0
-			for i := 1; i <= 5; i++ {
-				randomNumber := rand.Intn(15) + 1
-				fmt.Println("Numero elegido: ", randomNumber, " en nivel 3")
-				resp, err := c.Fase3(context.Background(), &pb.MercenarioMensaje{Decision: int32(randomNumber), Id: int32(id)})
-				if err != nil {
-					log.Fatalf("Error en Fase1: %v", err)
-				}
-				if resp.GetEstado() == 1 {
-					fmt.Printf("Mercenario %d ha acertado\n", id)
-					aciertos += 1
-				}
-				if aciertos >= 2 {
-					fmt.Println("Mercenario", id, "ha derrotado al Patriarca!")
-					Nivel = 0
-					break
-				}
+			if resp.GetEstado() == 0 {
+				fmt.Printf("Muere mercenario %d\n", id)
+				Nivel = 0
+				return
 			}
 		}
 	}
+
+	if Nivel == 2 {
+		fmt.Println("Mercenario ", id, " en nivel 2")
+		randomNumber := rand.Intn(2) + 1
+		for {
+			resp, err := c.Fase2(context.Background(), &pb.MercenarioMensaje{Decision: int32(randomNumber), Id: int32(id)})
+			if err != nil {
+				log.Fatalf("Error en Fase2: %v", err)
+			}
+			if resp.GetEstado() == 1 {
+				fmt.Println("Mercenario", id, "pasa a nivel 3")
+				Nivel = 3
+				break
+			}
+			if resp.GetEstado() == 0 {
+				fmt.Printf("Muere mercenario %d\n", id)
+				Nivel = 0
+				return
+			}
+		}
+	}
+
+	if Nivel == 3{
+		numeros := make([]int32, 5)
+		for i := 0; i < 5; i++ {
+			numeros[i] = rand.Int31n(15) + 1
+			fmt.Println("Numero elegido: ", numeros[i], " en nivel 3")
+		}
+		
+		resp, err := c.Fase3(context.Background(), &pb.MercenarioMensaje{Decisiones: numeros, Id: int32(id)})
+		if err != nil {
+			log.Fatalf("Error en Fase1: %v", err)
+		}
+		if resp.GetEstado() == 1 {
+			fmt.Println("Mercenario", id, "ha derrotado al Patriarca!")
+			Nivel = 0
+			return
+		}
+		if resp.GetEstado() == 0 {
+			fmt.Printf("Muere mercenario %d\n", id)
+			Nivel = 0
+			return
+		}
+	}
+	
 }
