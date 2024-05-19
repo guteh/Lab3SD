@@ -3,17 +3,17 @@
 clean:
 	rm -rf DataNode
 
-merc: 
+merc:
 	rm -rf DataNode
 	mkdir DataNode
 	go run Mercenarios/Mercenarios.go
 
-namenode: 
+namenode:
 	rm -rf DataNode
 	mkdir DataNode
 	go run NameNode/NameNode.go
 
-director:
+director: 
 	rm -rf DataNode
 	mkdir DataNode
 	go run Director/Director.go
