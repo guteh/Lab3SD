@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"net"
+	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -12,14 +15,25 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-// Synchronize access to shared resources
+type server struct {  //Crea el servidor rcp con sus variables globales
+    pb.UnimplementedNameDataServer
+	grpcServer *grpc.Server
+	txt bool
+}
 
 func main() { 
 	var wg sync.WaitGroup
 
 	numMercenarios := 8 
+	grpcServer := grpc.NewServer() //Se crea el servidor
+	s := &server{ //Se le asignan los recursos al servidor
+		grpcServer:  grpcServer,
+		txt : false,
+	}
+	go StartServer(s, grpcServer) //Se inicia el servidor DataNode 3
 
 	// Inicio mercenarios
 	for i := 0; i < numMercenarios; i++ {  
@@ -33,11 +47,61 @@ func main() {
 	fmt.Println("Termina la mision de los mercenarios")
 }
 
+func StartServer(s *server, grpcServer *grpc.Server){
+	pb.RegisterNameDataServer(grpcServer, s) //Se registra el servidor
+	addr := "10.35.169.94:8086"  //DataNode3 //10.35.169.94:8080
+	lis, err := net.Listen("tcp", addr) //Se crea el listener
+    if err != nil {
+		log.Fatalf("Fallo al escuchar %v", err)
+    }
+	if err := grpcServer.Serve(lis); err != nil {  //Se inicia el servidor
+        log.Fatalf("Fallo al crear servidor: %s", err)
+    }
+}
+
+func (s *server) RegistroMercenario(ctx context.Context, req *pb.EnviarDecision) (*emptypb.Empty, error) {
+	fmt.Printf("DATANODE3\n")
+	piso := strconv.Itoa(int(req.GetPiso()))
+	nombretxt := "DataNode/Mercenario"+req.GetNombre()+"_"+piso+".txt"
+
+	file, err := os.Create(nombretxt)
+	if err != nil {
+		log.Fatalf("Fallo al crear archivo: %v", err)
+	}
+	defer file.Close()
+		
+	
+	file, err = os.OpenFile(nombretxt, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			log.Fatalf("Fallo al abrir archivo: %v", err)
+		}
+		defer file.Close()
+		decision := strconv.Itoa(int(req.GetDecision()))
+		if req.GetPiso() < 3 {
+			line := fmt.Sprintf("* "+decision+"\n")
+			if _, err := file.WriteString(line); err != nil {
+				log.Fatalf("Fallo al escribir en el archivo: %v", err)
+			}
+		}
+		if req.GetPiso() == 3 {
+			for i := 0; i < 5; i++ {
+				decision := strconv.Itoa(int(req.GetDecisiones()[i]))
+				line := fmt.Sprintf("* "+decision+"\n")
+				if _, err := file.WriteString(line); err != nil {
+					log.Fatalf("Fallo al escribir en el archivo: %v", err)
+				}
+			}
+		}
+	return &emptypb.Empty{}, nil
+}
+
+
+
 func InicioMercenario(id int, wg *sync.WaitGroup, Estado int32) {
 	defer wg.Done()
 
 	var Nivel int32
-	serverAddr := "0.0.0.0:8080"
+	serverAddr := "10.35.169.91:8080"  //10.35.169.91:8080
 
 	conn, err := grpc.NewClient(serverAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {

@@ -7,12 +7,14 @@ import (
 	"log"
 	"math/rand"
 	"net"
+	"os"
 	"strconv"
 	"sync"
 	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 var mutex = &sync.Mutex{} //Se crea un mutex para evitar problemas de concurrencia
 
@@ -20,10 +22,12 @@ var mutex = &sync.Mutex{} //Se crea un mutex para evitar problemas de concurrenc
 
 type server struct {  //Crea el servidor rcp con sus variables globales
     pb.UnimplementedMercDirServer
+	pb.UnimplementedNameDataServer
 	fase int
 	suma int
 	nmercenarios int
 	grpcServer *grpc.Server
+	grpcServer1 *grpc.Server
 	startSignalCh  chan struct{}
 	Señal1 chan struct{}
 	Señal2 chan struct{}
@@ -37,6 +41,8 @@ type server struct {  //Crea el servidor rcp con sus variables globales
 	Y int
 	camino int
 	NameNode pb.DirNameClient
+
+	
 }
 
 //Implementa la funcion SolicitarM de la interfaz ServicioRecursos de RCP
@@ -436,10 +442,13 @@ func (s *server) Fase3(ctx context.Context, req *pb.MercenarioMensaje) (*pb.Dire
 	return nil, nil
 }
 
-func StartServer(s *server, grpcServer *grpc.Server){
+func StartServerMerc(s *server, grpcServer *grpc.Server){
+	ip := "10.35.169.91:8080"
 	pb.RegisterMercDirServer(grpcServer, s) //Se registra el servidor
-	addr := "0.0.0.0:8080"  //Se asigna la direccion del servidor
-	lis, err := net.Listen("tcp", addr) //Se crea el listener
+	
+
+	 //Se asigna la direccion del servidor
+	lis, err := net.Listen("tcp", ip) //Se crea el listener
 	
     if err != nil {
 		log.Fatalf("Fallo al escuchar %v", err)
@@ -450,22 +459,78 @@ func StartServer(s *server, grpcServer *grpc.Server){
 	}
 }
 
+func StartServerData(s *server, grpcServer *grpc.Server){
+	fmt.Printf("DataNode\n")
+	ip := "10.35.169.91:8084"
+	pb.RegisterNameDataServer(grpcServer, s) //Se registra el servidor
+	 //Se asigna la direccion del servidor
+	lis, err := net.Listen("tcp", ip) //Se crea el listener
+	
+    if err != nil {
+		log.Fatalf("Fallo al escuchar %v", err)
+    }
+	
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Fatalf("Failed to serve: %v", err)
+	}
+}
+
+func (s *server) RegistroMercenario(ctx context.Context, req *pb.EnviarDecision) (*emptypb.Empty, error) {
+
+	piso := strconv.Itoa(int(req.GetPiso()))
+	nombretxt := "DataNode/Mercenario"+req.GetNombre()+"_"+piso+".txt"
+
+	file, err := os.Create(nombretxt)
+	if err != nil {
+		log.Fatalf("Fallo al crear archivo: %v", err)
+	}
+	defer file.Close()
+
+	file, err = os.OpenFile(nombretxt, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			log.Fatalf("Fallo al abrir archivo: %v", err)
+		}
+		defer file.Close()
+		decision := strconv.Itoa(int(req.GetDecision()))
+		if req.GetPiso() < 3 {
+			line := fmt.Sprintf("* "+decision+"\n")
+			if _, err := file.WriteString(line); err != nil {
+				log.Fatalf("Fallo al escribir en el archivo: %v", err)
+			}
+		}
+		if req.GetPiso() == 3 {
+			for i := 0; i < 5; i++ {
+				decision := strconv.Itoa(int(req.GetDecisiones()[i]))
+				line := fmt.Sprintf("* "+decision+"\n")
+				if _, err := file.WriteString(line); err != nil {
+					log.Fatalf("Fallo al escribir en el archivo: %v", err)
+				}
+			}
+		}
+	return &emptypb.Empty{}, nil
+}
+
 
 func main() {
 
-	conn, err := grpc.NewClient("0.0.0.0:8081", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	//Conexion a NameNode
+	conn, err := grpc.NewClient("10.35.169.93:8080", grpc.WithTransportCredentials(insecure.NewCredentials()))  //10.35.169.93:8080
     if err != nil {
-        log.Fatalf("Fallo al conectarse a NameNode: %v", err)
+		log.Fatalf("Fallo al conectarse a NameNode: %v", err)
     }
     defer conn.Close()
     NameNode := pb.NewDirNameClient(conn)
 	
+
+
 	grpcServer := grpc.NewServer() //Se crea el servidor
+	grpcServer1 := grpc.NewServer() //Se crea el servidor
 	
 	mutex.Lock()
 	s := &server{ //Se le asignan los recursos al servidor
 		fase: 0,
 		grpcServer: grpcServer,
+		grpcServer1: grpcServer1,
 		decisions1: make([]int32, 0, 8),
 		decisions2: make([]int32, 0, 8),
 		decisions3: make(map[int][]int32),
@@ -483,9 +548,13 @@ func main() {
 	
 	mutex.Unlock()
 	
-	go StartServer(s, grpcServer)
+	//Grpc Mercenarios - Director
+	go StartServerMerc(s, grpcServer)
 
-	time.Sleep(10 * time.Second)
+	//Grpc DataNode
+	go StartServerData(s, grpcServer1)
+
+	time.Sleep(20 * time.Second)
 
 	
 	
