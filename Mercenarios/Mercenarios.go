@@ -100,7 +100,7 @@ func InicioMercenario(id int, wg *sync.WaitGroup, Estado int32) {
 	defer wg.Done()
 
 	var Nivel int32
-	serverAddr := "10.35.169.91:8088"  //10.35.169.91:8080
+	serverAddr := "172.17.0.1:8088"  //10.35.169.91:8080
 
 	conn, err := grpc.NewClient(serverAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {

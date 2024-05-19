@@ -443,7 +443,7 @@ func (s *server) Fase3(ctx context.Context, req *pb.MercenarioMensaje) (*pb.Dire
 }
 
 func StartServerMerc(s *server, grpcServer *grpc.Server){
-	ip := "10.35.169.91:8088"
+	ip := "172.17.0.1:8088"
 	pb.RegisterMercDirServer(grpcServer, s) //Se registra el servidor
 	
 
@@ -461,7 +461,7 @@ func StartServerMerc(s *server, grpcServer *grpc.Server){
 
 func StartServerData(s *server, grpcServer *grpc.Server){
 	fmt.Printf("DataNode\n")
-	ip := "10.35.169.91:8084"
+	ip := "172.17.0.1:8084"
 	pb.RegisterNameDataServer(grpcServer, s) //Se registra el servidor
 	 //Se asigna la direccion del servidor
 	lis, err := net.Listen("tcp", ip) //Se crea el listener
@@ -514,7 +514,7 @@ func (s *server) RegistroMercenario(ctx context.Context, req *pb.EnviarDecision)
 func main() {
 
 	//Conexion a NameNode
-	conn, err := grpc.NewClient("10.35.169.93:8080", grpc.WithTransportCredentials(insecure.NewCredentials()))  //10.35.169.93:8080
+	conn, err := grpc.NewClient("172.17.0.1:8080", grpc.WithTransportCredentials(insecure.NewCredentials()))  //10.35.169.93:8080
     if err != nil {
 		log.Fatalf("Fallo al conectarse a NameNode: %v", err)
     }
