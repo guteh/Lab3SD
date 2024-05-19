@@ -25,11 +25,7 @@ dist@dist084.inf.santiago.usm.cl - 6K57TE62BWqQ IP: 10.35.169.94
 - Director - NameNode: GRPC
 - NameNode - DataNodeX: GRPC
 
-
-Cada maquina tiene este repositorio github clonado, para actualizarlo escribir *git pull* en la consola y en el directorio Lab3SD
-
-Como cada maquina tiene el repositorio, solo es necesario correr los archivos de la maquina virtual.
-
+Instrucciones de compilacion: 
 
 Director: 
 - sudo docker build -t director -f Dockerfile.Director .
@@ -41,6 +37,11 @@ NameNode:
 
 Se buildean las dos pero al momento de correr no identifican tira error bind: cannot assign requested address, cuando a cada una la corro en su maquina respectiva, y si se corre con go run Director/Director.go y go run NameNode/NameNode.go se ejecutan bien.
 
-Hacer makefile que cree DataNode, ejecute los archivos necesarios y despues lo borre
+Existe un makefile para correr los archivos sin dockerizar, para eso se debe escribir en las terminales lo siguiente y en el siguiente orden:
+Notar que make merc no se debe ejecutar hasta que namenode y director printeen su primera linea respectiva!
 
+dist083: make namenode
+dist081: make director
+dist084: make merc
 
+Existe make clean para borrar el archivo DataNode que almacena datos de mercenarios
