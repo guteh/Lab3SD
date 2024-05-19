@@ -7,18 +7,32 @@ option go_package = "./Proto";  //Se define la carpeta donde se guardará el arc
 
 service MercDir {
   rpc MensajeDirector(MercenarioMensaje) returns (stream DirectorMensaje) {}  //Se define el método MercDir
+  rpc Fase1(MercenarioMensaje) returns (DirectorMensaje) {}
+  rpc Fase2(MercenarioMensaje) returns (DirectorMensaje) {}
+  rpc Fase3(MercenarioMensaje) returns (DirectorMensaje) {}
+  rpc SolicitarM(MercenarioMensaje) returns (DirectorMensaje) {}
+  rpc IniciarMision(MercenarioMensaje) returns (DirectorMensaje) {}
 }
+
 
 message MercenarioMensaje {  //Se define el mensaje que se enviará al director, ademas de decisiones tomadas
   int32 peticion = 1;
   int32 decision = 2;
+  int32 id = 3;
 }
 
 message DirectorMensaje { //Director envia inicio de mision, el estado despues de cada decision y fase
-  int32 inicio = 1;
-  int32 estado = 2;
-  int32 fase = 3;
+  int32 inicio = 1;  //Inicio de mision
+  int32 estado = 2;  //Vivo o Muerto
+  int32 fase = 3;  //Nivel en que estan
 }
+
+
+
+
+
+
+
 
 
 

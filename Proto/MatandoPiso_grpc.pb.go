@@ -24,6 +24,11 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MercDirClient interface {
 	MensajeDirector(ctx context.Context, in *MercenarioMensaje, opts ...grpc.CallOption) (MercDir_MensajeDirectorClient, error)
+	Fase1(ctx context.Context, in *MercenarioMensaje, opts ...grpc.CallOption) (*DirectorMensaje, error)
+	Fase2(ctx context.Context, in *MercenarioMensaje, opts ...grpc.CallOption) (*DirectorMensaje, error)
+	Fase3(ctx context.Context, in *MercenarioMensaje, opts ...grpc.CallOption) (*DirectorMensaje, error)
+	SolicitarM(ctx context.Context, in *MercenarioMensaje, opts ...grpc.CallOption) (*DirectorMensaje, error)
+	IniciarMision(ctx context.Context, in *MercenarioMensaje, opts ...grpc.CallOption) (*DirectorMensaje, error)
 }
 
 type mercDirClient struct {
@@ -66,11 +71,61 @@ func (x *mercDirMensajeDirectorClient) Recv() (*DirectorMensaje, error) {
 	return m, nil
 }
 
+func (c *mercDirClient) Fase1(ctx context.Context, in *MercenarioMensaje, opts ...grpc.CallOption) (*DirectorMensaje, error) {
+	out := new(DirectorMensaje)
+	err := c.cc.Invoke(ctx, "/Proto.MercDir/Fase1", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *mercDirClient) Fase2(ctx context.Context, in *MercenarioMensaje, opts ...grpc.CallOption) (*DirectorMensaje, error) {
+	out := new(DirectorMensaje)
+	err := c.cc.Invoke(ctx, "/Proto.MercDir/Fase2", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *mercDirClient) Fase3(ctx context.Context, in *MercenarioMensaje, opts ...grpc.CallOption) (*DirectorMensaje, error) {
+	out := new(DirectorMensaje)
+	err := c.cc.Invoke(ctx, "/Proto.MercDir/Fase3", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *mercDirClient) SolicitarM(ctx context.Context, in *MercenarioMensaje, opts ...grpc.CallOption) (*DirectorMensaje, error) {
+	out := new(DirectorMensaje)
+	err := c.cc.Invoke(ctx, "/Proto.MercDir/SolicitarM", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *mercDirClient) IniciarMision(ctx context.Context, in *MercenarioMensaje, opts ...grpc.CallOption) (*DirectorMensaje, error) {
+	out := new(DirectorMensaje)
+	err := c.cc.Invoke(ctx, "/Proto.MercDir/IniciarMision", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MercDirServer is the server API for MercDir service.
 // All implementations must embed UnimplementedMercDirServer
 // for forward compatibility
 type MercDirServer interface {
 	MensajeDirector(*MercenarioMensaje, MercDir_MensajeDirectorServer) error
+	Fase1(context.Context, *MercenarioMensaje) (*DirectorMensaje, error)
+	Fase2(context.Context, *MercenarioMensaje) (*DirectorMensaje, error)
+	Fase3(context.Context, *MercenarioMensaje) (*DirectorMensaje, error)
+	SolicitarM(context.Context, *MercenarioMensaje) (*DirectorMensaje, error)
+	IniciarMision(context.Context, *MercenarioMensaje) (*DirectorMensaje, error)
 	mustEmbedUnimplementedMercDirServer()
 }
 
@@ -80,6 +135,21 @@ type UnimplementedMercDirServer struct {
 
 func (UnimplementedMercDirServer) MensajeDirector(*MercenarioMensaje, MercDir_MensajeDirectorServer) error {
 	return status.Errorf(codes.Unimplemented, "method MensajeDirector not implemented")
+}
+func (UnimplementedMercDirServer) Fase1(context.Context, *MercenarioMensaje) (*DirectorMensaje, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Fase1 not implemented")
+}
+func (UnimplementedMercDirServer) Fase2(context.Context, *MercenarioMensaje) (*DirectorMensaje, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Fase2 not implemented")
+}
+func (UnimplementedMercDirServer) Fase3(context.Context, *MercenarioMensaje) (*DirectorMensaje, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Fase3 not implemented")
+}
+func (UnimplementedMercDirServer) SolicitarM(context.Context, *MercenarioMensaje) (*DirectorMensaje, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SolicitarM not implemented")
+}
+func (UnimplementedMercDirServer) IniciarMision(context.Context, *MercenarioMensaje) (*DirectorMensaje, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method IniciarMision not implemented")
 }
 func (UnimplementedMercDirServer) mustEmbedUnimplementedMercDirServer() {}
 
@@ -115,13 +185,124 @@ func (x *mercDirMensajeDirectorServer) Send(m *DirectorMensaje) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _MercDir_Fase1_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MercenarioMensaje)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MercDirServer).Fase1(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Proto.MercDir/Fase1",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MercDirServer).Fase1(ctx, req.(*MercenarioMensaje))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MercDir_Fase2_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MercenarioMensaje)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MercDirServer).Fase2(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Proto.MercDir/Fase2",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MercDirServer).Fase2(ctx, req.(*MercenarioMensaje))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MercDir_Fase3_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MercenarioMensaje)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MercDirServer).Fase3(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Proto.MercDir/Fase3",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MercDirServer).Fase3(ctx, req.(*MercenarioMensaje))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MercDir_SolicitarM_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MercenarioMensaje)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MercDirServer).SolicitarM(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Proto.MercDir/SolicitarM",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MercDirServer).SolicitarM(ctx, req.(*MercenarioMensaje))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MercDir_IniciarMision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MercenarioMensaje)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MercDirServer).IniciarMision(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Proto.MercDir/IniciarMision",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MercDirServer).IniciarMision(ctx, req.(*MercenarioMensaje))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // MercDir_ServiceDesc is the grpc.ServiceDesc for MercDir service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var MercDir_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "Proto.MercDir",
 	HandlerType: (*MercDirServer)(nil),
-	Methods:     []grpc.MethodDesc{},
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Fase1",
+			Handler:    _MercDir_Fase1_Handler,
+		},
+		{
+			MethodName: "Fase2",
+			Handler:    _MercDir_Fase2_Handler,
+		},
+		{
+			MethodName: "Fase3",
+			Handler:    _MercDir_Fase3_Handler,
+		},
+		{
+			MethodName: "SolicitarM",
+			Handler:    _MercDir_SolicitarM_Handler,
+		},
+		{
+			MethodName: "IniciarMision",
+			Handler:    _MercDir_IniciarMision_Handler,
+		},
+	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "MensajeDirector",
