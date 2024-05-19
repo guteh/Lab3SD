@@ -1,8 +1,7 @@
 .PHONY: clean merc namenode director
 
-
 clean:
-    rm -rf DataNode
+	rm -rf DataNode
 
 merc: 
 	rm -rf DataNode
