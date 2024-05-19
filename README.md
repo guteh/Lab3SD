@@ -1,3 +1,7 @@
+# Integrantes:
+Benjamín Gutierrez 202004621-2 
+Sofía Parada Hormazábal 202004671-9
+
 # Planificación
 
 
@@ -27,6 +31,8 @@ dist@dist084.inf.santiago.usm.cl - 6K57TE62BWqQ IP: 10.35.169.94
 
 Instrucciones de compilacion: 
 
+Para docker:
+ 
 Director: 
 - sudo docker build -t director -f Dockerfile.Director .
 - docker run -p 8080:8080 -p 8084:8084 director
@@ -35,10 +41,13 @@ NameNode:
 - sudo docker build -t namenode -f Dockerfile.NameNode .
 - sudo docker run -p 8080:8080 -p 8084:8084 -p 8086:8086 -p 8085:8085 namenode
 
-Se buildean las dos pero al momento de correr no identifican tira error bind: cannot assign requested address, cuando a cada una la corro en su maquina respectiva, y si se corre con go run Director/Director.go y go run NameNode/NameNode.go se ejecutan bien.
+Notar que make merc no se debe ejecutar hasta que namenode y director printeen su primera linea respectiva!
+Luego de esto ejecutar: make merc
+
+
+!!Se buildean las dos pero al momento de correr no identifican tira error bind: cannot assign requested address, cuando a cada una la corro en su maquina respectiva, y si se corre con go run Director/Director.go y go run NameNode/NameNode.go se ejecutan bien.
 
 Existe un makefile para correr los archivos sin dockerizar, para eso se debe escribir en las terminales lo siguiente y en el siguiente orden:
-Notar que make merc no se debe ejecutar hasta que namenode y director printeen su primera linea respectiva!
 
 dist083: make namenode
 dist081: make director
