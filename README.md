@@ -30,4 +30,17 @@ Cada maquina tiene este repositorio github clonado, para actualizarlo escribir *
 
 Como cada maquina tiene el repositorio, solo es necesario correr los archivos de la maquina virtual.
 
-hola
+
+Director: 
+- sudo docker build -t director -f Dockerfile.Director .
+- docker run -p 8080:8080 -p 8084:8084 director
+
+NameNode: 
+- sudo docker build -t namenode -f Dockerfile.NameNode .
+- sudo docker run -p 8080:8080 -p 8084:8084 -p 8086:8086 -p 8085:8085 namenode
+
+Se buildean las dos pero al momento de correr no identifican tira error bind: cannot assign requested address, cuando a cada una la corro en su maquina respectiva, y si se corre con go run Director/Director.go y go run NameNode/NameNode.go se ejecutan bien.
+
+Hacer makefile que cree DataNode, ejecute los archivos necesarios y despues lo borre
+
+
