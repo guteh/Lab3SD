@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 var mutex = &sync.Mutex{} //Se crea un mutex para evitar problemas de concurrencia
 
@@ -35,6 +36,7 @@ type server struct {  //Crea el servidor rcp con sus variables globales
 	X int
 	Y int
 	camino int
+	NameNode pb.DirNameClient
 }
 
 //Implementa la funcion SolicitarM de la interfaz ServicioRecursos de RCP
@@ -68,7 +70,8 @@ func (s *server) IniciarMision(ctx context.Context, req *pb.MercenarioMensaje) (
 func (s *server) Fase1(ctx context.Context, req *pb.MercenarioMensaje) (*pb.DirectorMensaje, error) {  //Implementa funcion fase1, le envia a cada mercenario si vive o muere
 	mutex.Lock()
 	s.decisions1 = append(s.decisions1, req.GetDecision()) //Agrego decision a lista con todas las deciisones
-	fmt.Printf("Mercenario %d ha enviado su decision: %d\n", req.GetId(), req.GetDecision())
+	s.NameNode.RegistrosDirector(context.Background(), &pb.EnviarDecision{Nombre: strconv.Itoa(int(req.GetId())), Piso: 1, Decision: req.GetDecision()}) //Envio decision al NameNode
+	//fmt.Printf("Mercenario %d ha enviado su decision: %d\n", req.GetId(), req.GetDecision())
 	if len(s.decisions1) == s.nmercenarios { //Si ya llegaron todas las decisiones
 		for s.X == s.Y{ //Genero valores X e Y globales, para que todos los mercenarios tengan los mismo valores
 			s.X = rand.Intn(100)
@@ -278,6 +281,7 @@ func (s *server) Fase2(ctx context.Context, req *pb.MercenarioMensaje) (*pb.Dire
 
 	mutex.Lock()
 	s.decisions2 = append(s.decisions2, req.GetDecision())
+	s.NameNode.RegistrosDirector(context.Background(), &pb.EnviarDecision{Nombre: strconv.Itoa(int(req.GetId())), Piso: 2, Decision: req.GetDecision()}) //Envio decision al NameNode
 	if len(s.decisions2) == s.nmercenarios && s.nmercenarios > 1{
 		s.camino = rand.Intn(2) // 0 = A, 1 = B Eligo entre 2 caminos cual va a ser el correcto
 		fmt.Printf("Comienza Piso 2!!\n")
@@ -367,6 +371,7 @@ func (s *server) Fase3(ctx context.Context, req *pb.MercenarioMensaje) (*pb.Dire
 		if _, exists := s.decisions3[int(req.GetId())]; !exists { //Si no existe el mercenario en el mapa de decisiones lo agrego
 			s.decisions3[int(req.GetId())] = make([]int32, 0, 5)
 		}
+		s.NameNode.RegistrosDirector(context.Background(), &pb.EnviarDecision{Nombre: strconv.Itoa(int(req.GetId())), Piso: 3, Decisiones: req.GetDecisiones()}) //Envio decision al NameNode
 		for i := 0; i < 5; i++ { //Agrego las decisiones del mercenario
 			s.decisions3[int(req.GetId())] = append(s.decisions3[int(req.GetId())], req.Decisiones[i])
 		}
@@ -431,13 +436,32 @@ func (s *server) Fase3(ctx context.Context, req *pb.MercenarioMensaje) (*pb.Dire
 	return nil, nil
 }
 
-
+func StartServer(s *server, grpcServer *grpc.Server){
+	pb.RegisterMercDirServer(grpcServer, s) //Se registra el servidor
+	addr := "0.0.0.0:8080"  //Se asigna la direccion del servidor
+	lis, err := net.Listen("tcp", addr) //Se crea el listener
+	
+    if err != nil {
+		log.Fatalf("Fallo al escuchar %v", err)
+    }
+	
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Fatalf("Failed to serve: %v", err)
+	}
+}
 
 
 func main() {
 
+	conn, err := grpc.NewClient("0.0.0.0:8081", grpc.WithTransportCredentials(insecure.NewCredentials()))
+    if err != nil {
+        log.Fatalf("Fallo al conectarse a NameNode: %v", err)
+    }
+    defer conn.Close()
+    NameNode := pb.NewDirNameClient(conn)
+	
 	grpcServer := grpc.NewServer() //Se crea el servidor
-
+	
 	mutex.Lock()
 	s := &server{ //Se le asignan los recursos al servidor
 		fase: 0,
@@ -454,20 +478,16 @@ func main() {
 		Señal3: make(chan struct{}),
 		decisor : make([]int32, 5),
 		camino: 0,
+		NameNode: NameNode,
     }
+	
 	mutex.Unlock()
+	
+	go StartServer(s, grpcServer)
 
-	pb.RegisterMercDirServer(grpcServer, s) //Se registra el servidor
+	time.Sleep(10 * time.Second)
 
 	
-	addr := "10.35.169.91:8080"  //Se asigna la direccion del servidor
-	lis, err := net.Listen("tcp", addr) //Se crea el listener
-    if err != nil {
-		log.Fatalf("Fallo al escuchar %v", err)
-    }
 	
-	if err := grpcServer.Serve(lis); err != nil {  //Se inicia el servidor
-        log.Fatalf("Fallo al crear servidor: %s", err)
-    }
-
+	
 }

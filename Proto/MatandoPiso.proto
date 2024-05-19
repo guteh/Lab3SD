@@ -66,6 +66,7 @@ message EnviarDecision {  //Se envian decisiones de mercenerario junto con el pi
   string nombre = 1;
   int32 decision = 2;
   int32 piso = 3;
+  repeated int32 decisiones = 4;
 }
 
 message EnviarSolicitud { //Director pide registros de mercenario por nombre
