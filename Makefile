@@ -1,11 +1,12 @@
 .PHONY: clean merc namenode director
 
 clean:
-        rm -rf DataNode
+	rm -rf DataNode
 merc:
 	rm -rf DataNode
 	mkdir DataNode
 	go run Mercenarios/Mercenarios.go
+
 namenode:
 	rm -rf DataNode
 	mkdir DataNode
