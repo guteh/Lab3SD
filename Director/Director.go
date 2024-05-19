@@ -460,7 +460,7 @@ func StartServerMerc(s *server, grpcServer *grpc.Server){
 }
 
 func StartServerData(s *server, grpcServer *grpc.Server){
-	fmt.Printf("DataNode\n")
+	fmt.Printf("Se inicia servicio Director!\n")
 	ip := "10.35.169.91:8084"
 	pb.RegisterNameDataServer(grpcServer, s) //Se registra el servidor
 	 //Se asigna la direccion del servidor
