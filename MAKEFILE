@@ -1,0 +1,17 @@
+.PHONY: clean Merc NameNode Director
+
+
+clean:
+    rm -rf DataNode
+
+merc: 
+	rm -rf DataNode
+	go run Mercenarios/Mercenarios.go
+
+namenode: 
+	rm -rf DataNode
+	go run NameNode/NameNode.go
+
+director:
+	rm -rf DataNode
+	go run Director/Director.go

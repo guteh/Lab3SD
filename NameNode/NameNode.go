@@ -110,7 +110,7 @@ func (s *server) RegistrosDirector(ctx context.Context, req *pb.EnviarDecision) 
 
 func StartServer(s *server, grpcServer *grpc.Server){
 	pb.RegisterDirNameServer(grpcServer, s) //Se registra el servidor
-	addr := "172.17.0.1:8080"  //Se asigna la direccion del servidor
+	addr := "10.35.169.93:8080"  //Se asigna la direccion del servidor
 	lis, err := net.Listen("tcp", addr) //Se crea el listener
     if err != nil {
 		log.Fatalf("Fallo al escuchar %v", err)
@@ -123,7 +123,7 @@ func StartServer(s *server, grpcServer *grpc.Server){
 
 
 func main() {
-	conn1, err := grpc.NewClient("172.17.0.1:8084", grpc.WithTransportCredentials(insecure.NewCredentials()))  //DATA NODE1 10.35.169.91:8084
+	conn1, err := grpc.NewClient("10.35.169.91:8084", grpc.WithTransportCredentials(insecure.NewCredentials()))  //DATA NODE1 10.35.169.91:8084
     if err != nil {
         log.Fatalf("Fallo al conectarse a NameNode: %v", err)
     }
