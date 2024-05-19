@@ -60,7 +60,6 @@ func StartServer(s *server, grpcServer *grpc.Server){
 }
 
 func (s *server) RegistroMercenario(ctx context.Context, req *pb.EnviarDecision) (*emptypb.Empty, error) {
-	fmt.Printf("DATANODE3\n")
 	piso := strconv.Itoa(int(req.GetPiso()))
 	nombretxt := "DataNode/Mercenario"+req.GetNombre()+"_"+piso+".txt"
 
