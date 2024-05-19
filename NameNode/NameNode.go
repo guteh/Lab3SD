@@ -76,14 +76,13 @@ func (s *server) RegistrosDirector(ctx context.Context, req *pb.EnviarDecision) 
 		if _, err := file.WriteString(line); err != nil {
 			log.Fatalf("Failed to write to file: %v", err)
 		}
-		/* FALTA IMPLEMENTACION DOSH BANK
 		if req.GetPiso() < 3 {
 			s.dNode2.RegistroMercenario(context.Background(), &pb.EnviarDecision{Nombre: req.GetNombre(), Piso: req.GetPiso(), Decision: req.GetDecision()})
 		}
 		if req.GetPiso() == 3 {
 			s.dNode2.RegistroMercenario(context.Background(), &pb.EnviarDecision{Nombre: req.GetNombre(), Piso: req.GetPiso(), Decisiones: req.GetDecisiones()})
 		}
-		*/
+		
 	}
 
 	if s.mercenarios[req.GetNombre()] == 2 {
@@ -131,7 +130,7 @@ func main() {
     DataNode1 := pb.NewNameDataClient(conn1)
 
 	
-	conn2, err := grpc.NewClient("0.0.0.0:8085", grpc.WithTransportCredentials(insecure.NewCredentials()))  //DATANODE 2
+	conn2, err := grpc.NewClient("10.35.169.92:8085", grpc.WithTransportCredentials(insecure.NewCredentials()))  //DATANODE 2
     if err != nil {
         log.Fatalf("Fallo al conectarse a NameNode: %v", err)
     }
