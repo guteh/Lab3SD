@@ -17,7 +17,7 @@ var mutex = &sync.Mutex{} //Se crea un mutex para evitar problemas de concurrenc
 
 
 
-type server struct {  //Crea el servidor rcp
+type server struct {  //Crea el servidor rcp con sus variables globales
     pb.UnimplementedMercDirServer
 	fase int
 	suma int
@@ -45,20 +45,20 @@ func (s *server) SolicitarM(ctx context.Context, req *pb.MercenarioMensaje) (*pb
 	defer mutex.Unlock()
 
 	fmt.Printf("Mercenario %d ha llegado!\n", req.GetId())
-	s.mercenarios = append(s.mercenarios, strconv.Itoa(int(req.GetId())))
+	s.mercenarios = append(s.mercenarios, strconv.Itoa(int(req.GetId()))) //Se agrega a lista de mercenarios
 	s.suma += 1
 
-	if s.suma == s.nmercenarios {
+	if s.suma == s.nmercenarios { //Si ya llegaron todos los mercenarios
 		s.fase += 1
 		fmt.Printf("Se empieza mision! Fase actual: %d\n", s.fase)
-		close(s.startSignalCh) // Close the channel to signal all mercenaries to start
+		close(s.startSignalCh) //Se da se;al de inicio
 	}
 
 	return &pb.DirectorMensaje{Inicio: 1, Fase: int32(s.fase)}, nil
 }
 
 func (s *server) IniciarMision(ctx context.Context, req *pb.MercenarioMensaje) (*pb.DirectorMensaje, error) {
-	<-s.startSignalCh // Wait until the start signal is received
+	<-s.startSignalCh // Se inicia la mision
 	return &pb.DirectorMensaje{Inicio: 1, Fase: int32(s.fase)}, nil
 }
 
@@ -67,61 +67,61 @@ func (s *server) IniciarMision(ctx context.Context, req *pb.MercenarioMensaje) (
 
 func (s *server) Fase1(ctx context.Context, req *pb.MercenarioMensaje) (*pb.DirectorMensaje, error) {  //Implementa funcion fase1, le envia a cada mercenario si vive o muere
 	mutex.Lock()
-	s.decisions1 = append(s.decisions1, req.GetDecision())
+	s.decisions1 = append(s.decisions1, req.GetDecision()) //Agrego decision a lista con todas las deciisones
 	fmt.Printf("Mercenario %d ha enviado su decision: %d\n", req.GetId(), req.GetDecision())
-	if len(s.decisions1) == s.nmercenarios {
-		for s.X == s.Y{
+	if len(s.decisions1) == s.nmercenarios { //Si ya llegaron todas las decisiones
+		for s.X == s.Y{ //Genero valores X e Y globales, para que todos los mercenarios tengan los mismo valores
 			s.X = rand.Intn(100)
 			s.Y = rand.Intn(100)
 		}
-		close(s.Señal1)
+		close(s.Señal1) //Libero señal de inicio
 	}
 	mutex.Unlock()
 	
-	<-s.Señal1 // Wait until all decisions are received
+	<-s.Señal1 // Espero a que lleguen todas las decisiones y se;al de inicio
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	//fmt.Printf("X: %d Y: %d\n", s.X, s.Y)
 	
 
-	decisor := rand.Intn(100)
+	decisor := rand.Intn(100) //Numero que indica si vive o muere
 
-	if s.X < s.Y {
+	if s.X < s.Y { 
 		prob1 := s.X
 		prob2 := s.Y - s.X
 		prob3 := 100 - s.Y
 
-		if req.GetDecision() == 1{
-			if decisor <= prob1{
+		if req.GetDecision() == 1{ //Si eligio el arma 1
+			if decisor <= prob1{  //Gano la probabildiad
 				return &pb.DirectorMensaje{Estado: 1, Fase: int32(s.fase)}, nil
 			}
 
-			if decisor > prob1{
+			if decisor > prob1{ //Perdio la probabilidad
 				 
 				fmt.Printf("Mercenario %d ha muerto\n", req.GetId())
-				s.nmercenarios -= 1
-				nombre := strconv.Itoa(int(req.GetId())) // replace with the name you want to remove
+				s.nmercenarios -= 1 //Decremento la cantidad de mercenarios
+				nombre := strconv.Itoa(int(req.GetId())) //Quito mercenario de la lista
 				for i := range s.mercenarios {
-					if s.mercenarios[i] == nombre { // replace .Name with the actual field name
+					if s.mercenarios[i] == nombre { 
 						s.mercenarios = append(s.mercenarios[:i], s.mercenarios[i+1:]...)
 						break
 					}
 				}
-				if s.nmercenarios == 1 {
-					fmt.Printf("Misión terminada\n")
+				if s.nmercenarios == 1 { //Si solo queda un mercenario
 					go func ()  {
-						time.Sleep(1 * time.Second)
+						time.Sleep(1 * time.Second) //Espero un segundo para cerrar el servidor
+						fmt.Printf("Misión terminada por falta de mercenarios, se le entregara el monto al sobreviviente\n")
 						s.grpcServer.Stop()
 					}()
-					return &pb.DirectorMensaje{Estado: 0, Fase: 0}, nil
+					return &pb.DirectorMensaje{Estado: 0, Fase: 0}, nil //Devuelvo que termino la mision
 				}
-				return &pb.DirectorMensaje{Estado: 0, Fase: 0}, nil
+				return &pb.DirectorMensaje{Estado: 0, Fase: 0}, nil //Devuelvo que murio
 				
 			}
 		}
 
-		if req.GetDecision() == 2{
+		if req.GetDecision() == 2{	 //Elgii arma 2
+			//Misma logica de antes con probabildiades
 			if decisor <= prob2{
 				fmt.Printf("Mercenario %d ha sobrevivido\n", req.GetId())
 				return &pb.DirectorMensaje{Estado: 1, Fase: int32(s.fase)}, nil
@@ -132,17 +132,17 @@ func (s *server) Fase1(ctx context.Context, req *pb.MercenarioMensaje) (*pb.Dire
 				 
 				fmt.Printf("Mercenario %d ha muerto\n", req.GetId())
 				s.nmercenarios -= 1
-				nombre := strconv.Itoa(int(req.GetId())) // replace with the name you want to remove
+				nombre := strconv.Itoa(int(req.GetId()))
 				for i := range s.mercenarios {
-					if s.mercenarios[i] == nombre { // replace .Name with the actual field name
+					if s.mercenarios[i] == nombre {
 						s.mercenarios = append(s.mercenarios[:i], s.mercenarios[i+1:]...)
 						break
 					}
 				}
 				if s.nmercenarios == 1 {
-					fmt.Printf("Misión terminada\n")
 					go func ()  {
 						time.Sleep(1 * time.Second)
+						fmt.Printf("Misión terminada por falta de mercenarios, se le entregara el monto al sobreviviente\n")
 						s.grpcServer.Stop()
 					}()
 					return &pb.DirectorMensaje{Estado: 0, Fase: 0}, nil
@@ -151,7 +151,7 @@ func (s *server) Fase1(ctx context.Context, req *pb.MercenarioMensaje) (*pb.Dire
 			}
 		}
 
-		if req.GetDecision() == 3{
+		if req.GetDecision() == 3{ //Eligio arma 3
 			if decisor <= prob3{
 				fmt.Printf("Mercenario %d ha sobrevivido\n", req.GetId())
 				return &pb.DirectorMensaje{Estado: 1, Fase: int32(s.fase)}, nil
@@ -169,9 +169,9 @@ func (s *server) Fase1(ctx context.Context, req *pb.MercenarioMensaje) (*pb.Dire
 					}
 				}
 				if s.nmercenarios == 1 {
-					fmt.Printf("Misión terminada\n")
 					go func ()  {
-						 time.Sleep(1 * time.Second)
+						time.Sleep(1 * time.Second)
+						fmt.Printf("Misión terminada por falta de mercenarios, se le entregara el monto al sobreviviente\n")
 						s.grpcServer.Stop()
 						}()
 					return &pb.DirectorMensaje{Estado: 0, Fase: 0}, nil
@@ -180,11 +180,12 @@ func (s *server) Fase1(ctx context.Context, req *pb.MercenarioMensaje) (*pb.Dire
 			}
 		}
 	}
-	if s.Y <= s.X {
+	if s.Y <= s.X { //En el caso que Y sea menor o igual a X, se cambian las probabilidades pero misma logica
 		prob1 := s.Y
 		prob2 := s.X - s.Y
 		prob3 := 100 - s.X
-		if req.GetDecision() == 1{
+
+		if req.GetDecision() == 1{ //Arma 1
 			if decisor <= prob1{
 				fmt.Printf("Mercenario %d ha sobrevivido\n", req.GetId())
 				return &pb.DirectorMensaje{Estado: 1, Fase: int32(s.fase)}, nil
@@ -193,17 +194,17 @@ func (s *server) Fase1(ctx context.Context, req *pb.MercenarioMensaje) (*pb.Dire
 				 
 				fmt.Printf("Mercenario %d ha muerto\n", req.GetId())
 				s.nmercenarios -= 1
-				nombre := strconv.Itoa(int(req.GetId())) // replace with the name you want to remove
+				nombre := strconv.Itoa(int(req.GetId()))
 				for i := range s.mercenarios {
-					if s.mercenarios[i] == nombre { // replace .Name with the actual field name
+					if s.mercenarios[i] == nombre { 
 						s.mercenarios = append(s.mercenarios[:i], s.mercenarios[i+1:]...)
 						break
 					}
 				}
 				if s.nmercenarios == 1 {
-					fmt.Printf("Misión terminada\n")
 					go func ()  {
-						 time.Sleep(1 * time.Second)
+						time.Sleep(1 * time.Second)
+						fmt.Printf("Misión terminada por falta de mercenarios, se le entregara el monto al sobreviviente\n")
 						s.grpcServer.Stop()
 					}()
 					return &pb.DirectorMensaje{Estado: 0, Fase: 0}, nil
@@ -212,7 +213,7 @@ func (s *server) Fase1(ctx context.Context, req *pb.MercenarioMensaje) (*pb.Dire
 			}
 		}
 		
-		if req.GetDecision() == 2{
+		if req.GetDecision() == 2{ //Arma 2
 			if decisor <= prob2{
 				fmt.Printf("Mercenario %d ha sobrevivido\n", req.GetId())
 				return &pb.DirectorMensaje{Estado: 1, Fase: int32(s.fase)}, nil
@@ -222,17 +223,17 @@ func (s *server) Fase1(ctx context.Context, req *pb.MercenarioMensaje) (*pb.Dire
 				 
 				fmt.Printf("Mercenario %d ha muerto\n", req.GetId())
 				s.nmercenarios -= 1
-				nombre := strconv.Itoa(int(req.GetId())) // replace with the name you want to remove
+				nombre := strconv.Itoa(int(req.GetId())) 
 				for i := range s.mercenarios {
-					if s.mercenarios[i] == nombre { // replace .Name with the actual field name
+					if s.mercenarios[i] == nombre { 
 						s.mercenarios = append(s.mercenarios[:i], s.mercenarios[i+1:]...)
 						break
 					}
 				}
 				if s.nmercenarios == 1 {
-					fmt.Printf("Misión terminada\n")
 					go func ()  {
-						 time.Sleep(1 * time.Second)
+						time.Sleep(1 * time.Second)
+						fmt.Printf("Misión terminada por falta de mercenarios, se le entregara el monto al sobreviviente\n")
 						s.grpcServer.Stop()
 					}()
 					return &pb.DirectorMensaje{Estado: 0, Fase: 0}, nil
@@ -241,7 +242,7 @@ func (s *server) Fase1(ctx context.Context, req *pb.MercenarioMensaje) (*pb.Dire
 			}
 		}
 
-		if req.GetDecision() == 3{
+		if req.GetDecision() == 3{ //Arma 3
 			if decisor <= prob3{
 				fmt.Printf("Mercenario %d ha sobrevivido\n", req.GetId())
 				return &pb.DirectorMensaje{Estado: 1, Fase: int32(s.fase)}, nil
@@ -251,17 +252,17 @@ func (s *server) Fase1(ctx context.Context, req *pb.MercenarioMensaje) (*pb.Dire
 				 
 				fmt.Printf("Mercenario %d ha muerto\n", req.GetId())
 				s.nmercenarios -= 1
-				nombre := strconv.Itoa(int(req.GetId())) // replace with the name you want to remove
+				nombre := strconv.Itoa(int(req.GetId()))
 				for i := range s.mercenarios {
-					if s.mercenarios[i] == nombre { // replace .Name with the actual field name
+					if s.mercenarios[i] == nombre {
 						s.mercenarios = append(s.mercenarios[:i], s.mercenarios[i+1:]...)
 						break
 					}
 				}
 				if s.nmercenarios == 1 {
-					fmt.Printf("Misión terminada\n")
 					go func ()  {
-						 time.Sleep(1 * time.Second)
+						time.Sleep(1 * time.Second)
+						fmt.Printf("Misión terminada por falta de mercenarios, se le entregara el monto al sobreviviente\n")
 						s.grpcServer.Stop()
 					}()
 					return &pb.DirectorMensaje{Estado: 0, Fase: 0}, nil
@@ -274,153 +275,159 @@ func (s *server) Fase1(ctx context.Context, req *pb.MercenarioMensaje) (*pb.Dire
 }
 
 func (s *server) Fase2(ctx context.Context, req *pb.MercenarioMensaje) (*pb.DirectorMensaje, error) { //Implementa funcion fase2, le envia a cada mercenario si vive o muere
-	if s.nmercenarios > 1 {
-		mutex.Lock()
-		s.decisions2 = append(s.decisions2, req.GetDecision())
-		if len(s.decisions2) == s.nmercenarios {
-			s.camino = rand.Intn(2) // 0 = A, 1 = B
-			fmt.Printf("Comienza Piso 2!!\n")
-			fmt.Printf("Mercenarios vivos:\n")
-			for i := 0; i < len(s.mercenarios); i++ {
-				fmt.Printf("%s\n", s.mercenarios[i])
-			}
-			s.fase += 1
-			close(s.Señal2)
-		}
-		mutex.Unlock()
-		
-		<-s.Señal2 // Wait until all decisions are received
-		mutex.Lock()
-		defer mutex.Unlock()
 
-		if s.camino == 0 && req.GetDecision() == 1{
-			fmt.Printf("Mercenario %d ha sobrevivido\n", req.GetId())
-			return &pb.DirectorMensaje{Estado: 1, Fase: int32(s.fase)}, nil
+	mutex.Lock()
+	s.decisions2 = append(s.decisions2, req.GetDecision())
+	if len(s.decisions2) == s.nmercenarios && s.nmercenarios > 1{
+		s.camino = rand.Intn(2) // 0 = A, 1 = B Eligo entre 2 caminos cual va a ser el correcto
+		fmt.Printf("Comienza Piso 2!!\n")
+		fmt.Printf("Mercenarios vivos:\n")
+		for i := 0; i < len(s.mercenarios); i++ {
+			fmt.Printf("%s\n", s.mercenarios[i])
 		}
-		if s.camino == 1 && req.GetDecision() == 1{
-			
-			fmt.Printf("Mercenario %d ha muerto\n", req.GetId())
-			s.nmercenarios -= 1
-			nombre := strconv.Itoa(int(req.GetId()))
-			for i := range s.mercenarios {
-				if s.mercenarios[i] == nombre {
-					s.mercenarios = append(s.mercenarios[:i], s.mercenarios[i+1:]...)
-					break
-				}
-			}
-			if s.nmercenarios == 1 {
-				fmt.Printf("Misión terminada\n")
-				go func ()  {
-					time.Sleep(1 * time.Second)
-					s.grpcServer.Stop()
-				}()
-				return &pb.DirectorMensaje{Estado: 0, Fase: 0}, nil
-			}
-			return &pb.DirectorMensaje{Estado: 0, Fase: 0}, nil
-			
-		}
-
-		if s.camino == 0 && req.GetDecision() == 2{
-			
-			fmt.Printf("Mercenario %d ha muerto\n", req.GetId())
-			s.nmercenarios -= 1
-			nombre := strconv.Itoa(int(req.GetId())) // replace with the name you want to remove
-			for i := range s.mercenarios {
-				if s.mercenarios[i] == nombre { // replace .Name with the actual field name
-					s.mercenarios = append(s.mercenarios[:i], s.mercenarios[i+1:]...)
-					break
-				}
-			}
-			if s.nmercenarios == 1 {
-				fmt.Printf("Misión terminada\n")
-				go func ()  {
-					time.Sleep(1 * time.Second)
-					s.grpcServer.Stop()
-				}()
-				return &pb.DirectorMensaje{Estado: 0, Fase: 0}, nil
-			}
-			return &pb.DirectorMensaje{Estado: 0, Fase: 0}, nil
-		}
-		
-
-		if s.camino == 1 && req.GetDecision() == 2{
-			fmt.Printf("Mercenario %d ha sobrevivido\n", req.GetId())
-			return &pb.DirectorMensaje{Estado: 1, Fase: int32(s.fase)}, nil
-		}
+		s.fase += 1
+		close(s.Señal2)
 	}
+	mutex.Unlock()
+	if s.nmercenarios == 1 {
+		go func ()  {
+			time.Sleep(1 * time.Second)
+			fmt.Printf("Misión terminada por falta de mercenarios, se le entregara el monto al sobreviviente\n")
+			s.grpcServer.Stop()
+		}()
+		return &pb.DirectorMensaje{Estado: 0, Fase: 0}, nil
+	}
+	
+	<-s.Señal2 
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	if s.camino == 0 && req.GetDecision() == 1{ //Si eligio el camino A y era el A
+		fmt.Printf("Mercenario %d ha sobrevivido\n", req.GetId())
+		return &pb.DirectorMensaje{Estado: 1, Fase: int32(s.fase)}, nil
+	}
+	if s.camino == 1 && req.GetDecision() == 1{ //Si eligio el camino A y era el B
+		
+		fmt.Printf("Mercenario %d ha muerto\n", req.GetId())
+		s.nmercenarios -= 1
+		nombre := strconv.Itoa(int(req.GetId()))
+		for i := range s.mercenarios {
+			if s.mercenarios[i] == nombre {
+				s.mercenarios = append(s.mercenarios[:i], s.mercenarios[i+1:]...)
+				break
+			}
+		}
+		if s.nmercenarios == 1 {
+			go func ()  {
+				time.Sleep(1 * time.Second)
+				fmt.Printf("Misión terminada por falta de mercenarios, se le entregara el monto al sobreviviente\n")
+				s.grpcServer.Stop()
+			}()
+			return &pb.DirectorMensaje{Estado: 0, Fase: 0}, nil
+		}
+		return &pb.DirectorMensaje{Estado: 0, Fase: 0}, nil
+		
+	}
+
+	if s.camino == 0 && req.GetDecision() == 2{ //Si eligio el camino B y era el A
+		
+		fmt.Printf("Mercenario %d ha muerto\n", req.GetId())
+		s.nmercenarios -= 1
+		nombre := strconv.Itoa(int(req.GetId())) 
+		for i := range s.mercenarios {
+			if s.mercenarios[i] == nombre { 
+				s.mercenarios = append(s.mercenarios[:i], s.mercenarios[i+1:]...)
+				break
+			}
+		}
+		if s.nmercenarios == 1 { 
+			go func ()  {
+				time.Sleep(1 * time.Second)
+				fmt.Printf("Misión terminada por falta de mercenarios, se le entregara el monto al sobreviviente\n")
+				s.grpcServer.Stop()
+			}()
+			return &pb.DirectorMensaje{Estado: 0, Fase: 0}, nil
+		}
+		return &pb.DirectorMensaje{Estado: 0, Fase: 0}, nil
+	}
+	
+
+	if s.camino == 1 && req.GetDecision() == 2{ //Si eligio el camino B y era el B
+		fmt.Printf("Mercenario %d ha sobrevivido\n", req.GetId())
+		return &pb.DirectorMensaje{Estado: 1, Fase: int32(s.fase)}, nil
+	}
+	
 	return nil, nil
 }
 
 func (s *server) Fase3(ctx context.Context, req *pb.MercenarioMensaje) (*pb.DirectorMensaje, error) {
 	if s.nmercenarios > 1 {
-	mutex.Lock()
-	defer mutex.Unlock()
-	if _, exists := s.decisions3[int(req.GetId())]; !exists {
-		s.decisions3[int(req.GetId())] = make([]int32, 0, 5)
-	}
-	for i := 0; i < 5; i++ {
-		s.decisions3[int(req.GetId())] = append(s.decisions3[int(req.GetId())], req.Decisiones[i])
-	}
-	
-		if len(s.decisions3) == s.nmercenarios && s.nmercenarios > 1{
-			fmt.Printf("Comienza Piso 3!!\n")
-			fmt.Printf("Mercenarios vivos:\n")
-			for i := 0; i < len(s.mercenarios); i++ {
-				fmt.Printf("%s\n", s.mercenarios[i])
-			}
-			fmt.Printf("Decisiones de los mercenarios:\n")
-			for mercID, decisiones := range s.decisions3 {
-				fmt.Printf("Mercenario %d: %v\n", mercID, decisiones)
-			}
-
-			ganadores := make([]int, 0)
-
-			for i := 0; i < 5; i++ {
-				s.decisor[i] = rand.Int31n(15) + 1
-				fmt.Printf("El número elegido por Director es %d\n", s.decisor[i])
-			}
-
-			for mercID, decisiones := range s.decisions3 {
-				
-				aciertos := 0
-				for i, decision := range decisiones {
-					//fmt.Printf("Mercenario %d eligió %d y la opcion era %d\n", mercID, decision,s.decisor[i])
-					if decision == s.decisor[i] {
-						//fmt.Printf("Ha acertado un numero!")
-						aciertos += 1
-					}
+		mutex.Lock()
+		defer mutex.Unlock()
+		if _, exists := s.decisions3[int(req.GetId())]; !exists { //Si no existe el mercenario en el mapa de decisiones lo agrego
+			s.decisions3[int(req.GetId())] = make([]int32, 0, 5)
+		}
+		for i := 0; i < 5; i++ { //Agrego las decisiones del mercenario
+			s.decisions3[int(req.GetId())] = append(s.decisions3[int(req.GetId())], req.Decisiones[i])
+		}
+		
+			if len(s.decisions3) == s.nmercenarios && s.nmercenarios > 1{ //Si ya llegaron todas las decisiones
+				fmt.Printf("Comienza Piso 3!!\n")
+				fmt.Printf("Mercenarios vivos:\n")
+				for i := 0; i < len(s.mercenarios); i++ {  //Imprimo los mercenarios vivos
+					fmt.Printf("%s\n", s.mercenarios[i])
 				}
-				if aciertos >= 2 {
-					ganadores = append(ganadores, mercID)
+				for mercID, decisiones := range s.decisions3 { //Imprimo las decisiones de los mercenarios
+					fmt.Printf("Mercenario %d: %v\n", mercID, decisiones)
+				}
+
+				ganadores := make([]int, 0) //Lista de ganadores para almacenarlos
+
+				for i := 0; i < 5; i++ {
+					s.decisor[i] = rand.Int31n(15) + 1
+					fmt.Printf("El número elegido por Director es %d\n", s.decisor[i]) //Genero los numeros del director
+				}
+
+				for mercID, decisiones := range s.decisions3 { //Comparo las decisiones de los mercenarios con las del director
 					
-				}
-				
-				if aciertos < 2 {
-					fmt.Printf("Mercenario %d ha muerto\n", req.GetId())
-					s.nmercenarios -= 1
-					fmt.Printf("Mercenarios restantes: %d\n",s.nmercenarios )
-					if s.nmercenarios == 1 {
-						fmt.Printf("Misión terminada\n")
-						go func ()  {
-							time.Sleep(1 * time.Second)
-							s.grpcServer.Stop()
-						}()
+					aciertos := 0 //Cantidad de aciertos
+					for i, decision := range decisiones { //Recorro las decisiones
+						//fmt.Printf("Mercenario %d eligió %d y la opcion era %d\n", mercID, decision,s.decisor[i])
+						if decision == s.decisor[i] { //Si acierta
+							aciertos += 1 //Incremento aciertos
+						}
+					}
+					if aciertos >= 2 { //Si acierta 2 o mas veces lo agrego a la lista de ganadores
+						ganadores = append(ganadores, mercID)
+						
+					}
+					
+					if aciertos < 2 { //Si no acierta 2 o mas veces muere
+						fmt.Printf("Mercenario %d ha muerto\n", req.GetId())
+						s.nmercenarios -= 1
+						fmt.Printf("Mercenarios restantes: %d\n",s.nmercenarios )
+						if s.nmercenarios == 1 {
+							go func ()  {
+								time.Sleep(1 * time.Second)
+								fmt.Printf("Misión terminada por falta de mercenarios, se le entregara el monto al sobreviviente\n")
+								s.grpcServer.Stop()
+							}()
+							return &pb.DirectorMensaje{Estado: 0, Fase: 0}, nil
+						}
 						return &pb.DirectorMensaje{Estado: 0, Fase: 0}, nil
 					}
-					return &pb.DirectorMensaje{Estado: 0, Fase: 0}, nil
+					
 				}
-				
-			}
 
-			for _, ganadorID := range ganadores {
-				if int32(ganadorID) == req.GetId() {
-					fmt.Printf("Mercenario %d ha ganado\n", ganadorID)
-					s.nmercenarios -= 1
-					return &pb.DirectorMensaje{Estado: 1, Fase: 0}, nil
+				for _, ganadorID := range ganadores {
+					if int32(ganadorID) == req.GetId() {
+						fmt.Printf("Mercenario %d ha ganado\n", ganadorID)
+						s.nmercenarios -= 1
+						return &pb.DirectorMensaje{Estado: 1, Fase: 0}, nil
+					}
 				}
 			}
 		}
-	}
 	return nil, nil
 }
 
