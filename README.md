@@ -30,6 +30,7 @@ dist@dist084.inf.santiago.usm.cl - 6K57TE62BWqQ IP: 10.35.169.94
 - NameNode - DataNodeX: GRPC
 
 Instrucciones de compilacion: 
+Se debe ubicar en el directorio Lab3SD de cada maquina virtual, en donde se encuentran los archivos.
 
 Para docker:
  
