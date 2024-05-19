@@ -16,3 +16,8 @@ director:
 	rm -rf DataNode
 	mkdir DataNode
 	go run Director/Director.go
+
+doshbank: 
+	rm -rf DataNode
+	mkdir DataNode
+	go run DoshBank/DoshBank.go
