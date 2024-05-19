@@ -1,111 +1,132 @@
 package main
 
 import (
-
+	pb "Lab3SD/Proto"
+	"context"
 	"fmt"
 	"log"
+	"net"
 	"os"
-	"sync"
+	"strconv"
+	"time"
 
-    
-	"github.com/streadway/amqp"
-
+	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-var (
-	mutex               = &sync.Mutex{}
-	mercenariosMuertos  = make(map[int]bool)
-	montoAcumulado      int
-	archivoSalida       = "datos.txt"
-	archivoSalidaHeader = "Mercenario | Fase | Monto Acumulado\n"
-)
+type server struct {  //Crea el servidor rcp con sus variables globales
+    pb.UnimplementedNameDataServer
+	pb.UnimplementedDirNameServer
+	grpcServer *grpc.Server
+	grpcServer1 *grpc.Server
+	mercenarios map[string]int
+	dinero int
+	txt bool
 
-func failOnError(err error, msg string) {
-	if err != nil {
-		log.Fatalf("%s: %s", msg, err)
-	}
 }
 
-func consumeMessages() {
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
-	failOnError(err, "Failed to connect to RabbitMQ")
-	defer conn.Close()
+func (s *server) RegistrosDirector(ctx context.Context, req *pb.EnviarDecision) (*emptypb.Empty, error) {
+	s.dinero += 100000000
+	if !s.txt {  //Si direcciones.txt no existe, crearlo, y si existe vaciarlo
+		file, err := os.Create("montos.txt")
+		if err != nil {
+			log.Fatalf("Failed to create file: %v", err)
+		}
+		defer file.Close()
+		s.txt = true
+	}
+    log.Printf("Mercenario %s muerto en el piso %d: Nuevo monto: %d", req.GetNombre(), req.GetPiso(), s.dinero)
+	
+	file, err := os.OpenFile("montos.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatalf("Failed to open file: %v", err)
+	}
+	defer file.Close()
 
-	ch, err := conn.Channel()
-	failOnError(err, "Failed to open a channel")
-	defer ch.Close()
+	line := fmt.Sprintf("Mercenario %s Piso_%d %d\n", req.GetNombre(), req.GetPiso(), s.dinero)
+	if _, err := file.WriteString(line); err != nil {
+		log.Fatalf("Failed to write to file: %v", err)
+	}
+	
+    return &emptypb.Empty{}, nil
+}
 
-	q, err := ch.QueueDeclare(
-		"mercenario_status", // name
-		false,               // durable
-		false,               // delete when unused
-		false,               // exclusive
-		false,               // no-wait
-		nil,                 // arguments
-	)
-	failOnError(err, "Failed to declare a queue")
+func (s *server) RegistroMercenario(ctx context.Context, req *pb.EnviarDecision) (*emptypb.Empty, error) {
 
-	msgs, err := ch.Consume(
-		q.Name, // queue
-		"",     // consumer
-		true,   // auto-ack
-		false,  // exclusive
-		false,  // no-local
-		false,  // no-wait
-		nil,    // args
-	)
-	failOnError(err, "Failed to register a consumer")
+	piso := strconv.Itoa(int(req.GetPiso()))
+	nombretxt := "DataNode/Mercenario"+req.GetNombre()+"_"+piso+".txt"
 
-	go func() {
-		for d := range msgs {
-			body := string(d.Body)
-			fmt.Printf("Received a message: %s\n", body)
+	file, err := os.Create(nombretxt)
+	if err != nil {
+		log.Fatalf("Fallo al crear archivo: %v", err)
+	}
+	defer file.Close()
 
-			var mercenarioID, fase int
-			_, err := fmt.Sscanf(body, "Merceario %d falleció en el piso %d", &mercenarioID, &fase)
-			if err == nil {
-				mutex.Lock()
-				if _, exists := mercenariosMuertos[mercenarioID]; !exists {
-					mercenariosMuertos[mercenarioID] = true
-					montoAcumulado += calcularMontoPorMercenario()
-					guardarDatosEnArchivo(mercenarioID, fase, montoAcumulado)
-				}
-				mutex.Unlock()
+	file, err = os.OpenFile(nombretxt, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			log.Fatalf("Fallo al abrir archivo: %v", err)
+		}
+		defer file.Close()
+		decision := strconv.Itoa(int(req.GetDecision()))
+		if req.GetPiso() < 3 {
+			line := fmt.Sprintf("* "+decision+"\n")
+			if _, err := file.WriteString(line); err != nil {
+				log.Fatalf("Fallo al escribir en el archivo: %v", err)
 			}
 		}
-	}()
-}
-
-func calcularMontoPorMercenario() int {
-	// Implementar la lógica de cálculo del monto aquí
-	return 100 // Ejemplo: cada mercenario muerto agrega 100 al monto acumulado
-}
-
-func guardarDatosEnArchivo(mercenarioID, fase, monto int) {
-	f, err := os.OpenFile(archivoSalida, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Fatalf("Error al abrir el archivo: %v", err)
-	}
-	defer f.Close()
-
-	// Si el archivo está vacío, escribir el encabezado primero
-	fileInfo, _ := f.Stat()
-	if fileInfo.Size() == 0 {
-		if _, err := f.WriteString(archivoSalidaHeader); err != nil {
-			log.Fatalf("Error al escribir el encabezado: %v", err)
+		if req.GetPiso() == 3 {
+			for i := 0; i < 5; i++ {
+				decision := strconv.Itoa(int(req.GetDecisiones()[i]))
+				line := fmt.Sprintf("* "+decision+"\n")
+				if _, err := file.WriteString(line); err != nil {
+					log.Fatalf("Fallo al escribir en el archivo: %v", err)
+				}
+			}
 		}
-	}
-
-	// Escribir los datos del mercenario en el archivo
-	line := fmt.Sprintf("%d | %d | %d\n", mercenarioID, fase, monto)
-	if _, err := f.WriteString(line); err != nil {
-		log.Fatalf("Error al escribir en el archivo: %v", err)
-	}
+	return &emptypb.Empty{}, nil
 }
+
+func StartServerDosh(s *server, grpcServer *grpc.Server){
+	pb.RegisterDirNameServer(grpcServer, s) //Se registra el servidor
+	addr := "10.35.169.92:8089"  //Se asigna la direccion del servidor 10.35.169.92:8089
+	lis, err := net.Listen("tcp", addr) //Se crea el listener
+    if err != nil {
+		log.Fatalf("Fallo al escuchar %v", err)
+    }
+	log.Println("DoshBank escuchando solicitudes", addr)
+	if err := grpcServer.Serve(lis); err != nil {  //Se inicia el servidor
+        log.Fatalf("Fallo al crear servidor: %s", err)
+    }
+}
+
+func StartServerData(s *server, grpcServer *grpc.Server){
+	pb.RegisterNameDataServer(grpcServer, s) //Se registra el servidor
+	addr := "10.35.169.94:8085"  //DataNode3 //10.35.169.94:8085
+	lis, err := net.Listen("tcp", addr) //Se crea el listener
+    if err != nil {
+		log.Fatalf("Fallo al escuchar %v", err)
+    }
+	if err := grpcServer.Serve(lis); err != nil {  //Se inicia el servidor
+        log.Fatalf("Fallo al crear servidor: %s", err)
+    }
+}
+
 
 func main() {
-	consumeMessages()
+	
+	grpcServer := grpc.NewServer() //Se crea el servidor
+	grpcServer1 := grpc.NewServer() //Se crea el servidor
 
-	// Bloquear el main para mantener el consumidor corriendo
-	select {}
+	s := &server{ //Se le asignan los recursos al servidor
+		grpcServer:  grpcServer,
+		grpcServer1: grpcServer1,
+		mercenarios: make(map[string]int),
+		txt : false,
+	}
+
+	go StartServerDosh(s, grpcServer) //Se inicia el servidor
+	go StartServerData(s, grpcServer1) //Se inicia el servidor
+
+	time.Sleep(20 * time.Second)
+
 }
