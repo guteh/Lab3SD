@@ -46,11 +46,11 @@ DoshBank:
 - sudo docker build -t doshbank -f Dockerfile.DoshBank .
 - sudo docker run -p 8085:8085 -p 8089:8089 doshbank
 
-Notar que make merc no se debe ejecutar hasta que namenode y director printeen su primera linea respectiva!
+Notar que make merc no se debe ejecutar hasta que namenode, director, doshbank printeen su primera linea respectiva!
 Luego de esto ejecutar: make merc
 
 
-!!Se buildean las dos pero al momento de correr no identifican tira error bind: cannot assign requested address, cuando a cada una la corro en su maquina respectiva, y si se corre con go run Director/Director.go y go run NameNode/NameNode.go se ejecutan bien.
+!!Se buildean las tres pero al momento de correr no identifican tira error bind: cannot assign requested address, cuando a cada una la corro en su maquina respectiva, y si se corre con go run Director/Director.go y go run NameNode/NameNode.go se ejecutan bien.
 
 Existe un makefile para correr los archivos sin dockerizar, para eso se debe escribir en las terminales lo siguiente y en el siguiente orden:
 
