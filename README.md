@@ -42,6 +42,10 @@ NameNode:
 - sudo docker build -t namenode -f Dockerfile.NameNode .
 - sudo docker run -p 8080:8080 -p 8084:8084 -p 8086:8086 -p 8085:8085 namenode
 
+DoshBank: 
+- sudo docker build -t doshbank -f Dockerfile.DoshBank .
+- sudo docker run -p 8085:8085 -p 8089:8089 doshbank
+
 Notar que make merc no se debe ejecutar hasta que namenode y director printeen su primera linea respectiva!
 Luego de esto ejecutar: make merc
 
